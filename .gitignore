@@ -1,0 +1,18 @@
+# Environnements et secrets
+.env
+.env.*
+venv/
+.venv/
+__pycache__/
+node_modules/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
+*.log
