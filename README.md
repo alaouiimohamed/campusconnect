@@ -25,7 +25,7 @@ Projet réalisé dans le cadre du module **Projet réel et management d'équipe*
 
 ```
 campusconnect/
-├── backend/      # API et logique métier (à définir)
+├── backend/      # API Django + Django REST Framework
 ├── frontend/     # Interface web (à définir)
 ├── ai/           # Module d'intelligence artificielle (MVP 2)
 ├── docs/         # Charte de cadrage, UML, maquettes
@@ -34,13 +34,66 @@ campusconnect/
 
 ## Installation
 
-> À compléter une fois la stack technique validée par l'équipe.
+Stack backend : **Python 3.12**, **Django 5.2 LTS + Django REST Framework**, **PostgreSQL 16 + pgvector**.
+
+### 1. Cloner le dépôt
 
 ```bash
 git clone https://github.com/alaouiimohamed/campusconnect.git
 cd campusconnect
 git checkout develop
 ```
+
+### 2. Base de données (au choix)
+
+**Option A – Neon (cloud, sans Docker)**
+
+1. Créer un projet sur [neon.tech](https://neon.tech) (PostgreSQL 16).
+2. Copier l'URL de connexion (*Connection string*), qui doit contenir `?sslmode=require`.
+3. La coller dans `DATABASE_URL` du fichier `backend/.env` (étape 3).
+
+pgvector est disponible sur Neon : la migration `core.0001_enable_pgvector` l'active.
+Les tests créent une base temporaire `test_<nom>` sur Neon : le rôle utilisé doit avoir le droit `CREATEDB` (c'est le cas du rôle par défaut de Neon).
+
+**Option B – Docker**
+
+```bash
+docker compose up -d          # PostgreSQL 16 + pgvector sur localhost:5432
+```
+
+URL à mettre dans `backend/.env` :
+`DATABASE_URL=postgres://campusconnect:campusconnect@localhost:5432/campusconnect`
+
+### 3. Backend
+
+```bash
+cd backend
+py -3.12 -m venv .venv                  # macOS/Linux : python3.12 -m venv .venv
+.venv\Scripts\activate                  # macOS/Linux : source .venv/bin/activate
+pip install -r requirements-dev.txt
+cp .env.example .env                    # puis renseigner SECRET_KEY et DATABASE_URL
+python manage.py migrate core           # active pgvector
+python manage.py runserver
+```
+
+Vérifier : <http://localhost:8000/api/health/> doit renvoyer `{"status": "ok"}`.
+Si la base est injoignable, l'endpoint répond `503` avec `{"status": "error", ...}`.
+
+> ⚠️ Tant que le modèle utilisateur personnalisé (US01, `AUTH_USER_MODEL`) n'est pas fusionné,
+> ne lancez **pas** `python manage.py migrate` sans argument : cela créerait les tables `auth`
+> par défaut, incompatibles avec le futur modèle utilisateur.
+
+### 4. Tests et qualité
+
+```bash
+cd backend
+ruff check .
+black --check .
+pytest
+```
+
+La CI GitHub Actions (`.github/workflows/ci.yml`) exécute les mêmes vérifications sur chaque PR
+vers `develop` ou `main`, avec un service PostgreSQL pgvector.
 
 ## Contribuer
 
