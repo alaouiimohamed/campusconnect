@@ -19,7 +19,7 @@ Exemples : `feature/US01-inscription-compte`, `feature/US09-inscription-evenemen
 3. Committer régulièrement en respectant la convention ci-dessous.
 4. Pousser : `git push -u origin feature/US04-catalogue-evenements`
 5. Ouvrir une **Pull Request vers `develop`** et remplir le modèle.
-6. Au moins **1 revue approuvée** avant la fusion.
+6. Au moins **1 revue approuvée** et une **CI verte** avant la fusion.
 7. Supprimer la branche après la fusion.
 8. À la fin d'un MVP : PR `develop` → `main` + tag (`v1.0.0` pour MVP 1, `v2.0.0` pour MVP 2).
 
@@ -53,6 +53,7 @@ Pour lier un commit à une tâche ClickUp, ajouter son identifiant : `feat(event
 - Titre au format des commits.
 - Remplir le modèle (description, tâche ClickUp, tests).
 - Le code doit fonctionner localement avant la demande de revue.
+- **La CI doit être verte avant toute fusion** (ruff, black, pytest). Une PR dont la CI échoue ne peut pas être fusionnée.
 
 ## 5. Lien avec ClickUp
 
