@@ -26,7 +26,7 @@ Projet réalisé dans le cadre du module **Projet réel et management d'équipe*
 ```
 campusconnect/
 ├── backend/      # API Django + Django REST Framework
-├── frontend/     # Interface web (à définir)
+├── frontend/     # Interface web React + Vite
 ├── ai/           # Module d'intelligence artificielle (MVP 2)
 ├── docs/         # Charte de cadrage, UML, maquettes
 └── .github/      # Modèles de Pull Request
@@ -34,7 +34,8 @@ campusconnect/
 
 ## Installation
 
-Stack backend : **Python 3.12**, **Django 5.2 LTS + Django REST Framework**, **PostgreSQL 16 + pgvector**.
+- Backend : **Python 3.12**, **Django 5.2 LTS + Django REST Framework**, **PostgreSQL 16 + pgvector**.
+- Frontend : **Node.js 24 LTS**, **React + Vite** (JavaScript), ESLint, Prettier, Vitest + Testing Library.
 
 ### 1. Cloner le dépôt
 
@@ -83,17 +84,57 @@ Si la base est injoignable, l'endpoint répond `503` avec `{"status": "error", .
 > ne lancez **pas** `python manage.py migrate` sans argument : cela créerait les tables `auth`
 > par défaut, incompatibles avec le futur modèle utilisateur.
 
-### 4. Tests et qualité
+### 4. Frontend
 
 ```bash
+cd frontend
+npm ci                                  # installe les versions exactes du package-lock.json
+cp .env.example .env                    # VITE_API_URL=http://localhost:8000
+npm run dev
+```
+
+Ouvrir <http://localhost:5173> : la carte « État de l'API » affiche **ok** quand le backend répond,
+ou un message d'erreur s'il est injoignable.
+
+Les couleurs, la police (Poppins) et les espacements sont définis uniquement dans
+`frontend/src/styles/tokens.css` : les composants utilisent toujours ces variables.
+
+### 5. Lancer backend et frontend ensemble
+
+Dans deux terminaux :
+
+```bash
+# Terminal 1 – API sur http://localhost:8000
+cd backend
+.venv\Scripts\activate                  # macOS/Linux : source .venv/bin/activate
+python manage.py runserver
+
+# Terminal 2 – interface sur http://localhost:5173
+cd frontend
+npm run dev
+```
+
+Le backend autorise l'origine `http://localhost:5173` (CORS) ; le frontend appelle l'API via `VITE_API_URL`.
+
+### 6. Tests et qualité
+
+```bash
+# Backend
 cd backend
 ruff check .
 black --check .
 pytest
+
+# Frontend
+cd frontend
+npm run lint
+npm run format:check                    # npm run format pour corriger
+npm test
+npm run build
 ```
 
-La CI GitHub Actions (`.github/workflows/ci.yml`) exécute les mêmes vérifications sur chaque PR
-vers `develop` ou `main`, avec un service PostgreSQL pgvector.
+La CI GitHub Actions (`.github/workflows/ci.yml`) exécute ces vérifications sur chaque PR
+vers `develop` ou `main` : un job `backend` (avec un service PostgreSQL pgvector) et un job `frontend`.
 
 ## Contribuer
 
