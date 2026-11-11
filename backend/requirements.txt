@@ -3,3 +3,5 @@ djangorestframework==3.18.3
 django-environ==0.14.0
 django-cors-headers==4.9.0
 psycopg[binary]==3.3.8
+psycopg2-binary==2.9.7
+python-dotenv
