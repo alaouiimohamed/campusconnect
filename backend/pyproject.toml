@@ -13,6 +13,10 @@ extend-exclude = [".venv", "staticfiles"]
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "DJ"]
 
+[tool.ruff.lint.per-file-ignores]
+# Migrations générées par Django : textes d'aide longs non découpables par black.
+"*/migrations/*" = ["E501"]
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
