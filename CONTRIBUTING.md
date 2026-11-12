@@ -53,6 +53,7 @@ Pour lier un commit à une tâche ClickUp, ajouter son identifiant : `feat(event
 - Titre au format des commits.
 - Remplir le modèle (description, tâche ClickUp, tests).
 - Le code doit fonctionner localement avant la demande de revue.
+- Le fichier `.gitattributes` force les fins de ligne LF : sous Windows, `core.autocrlf` convertit sinon les fichiers en CRLF, ce qui fait échouer `npm run format:check` (Prettier exige `endOfLine: lf`).
 - **La CI doit être verte avant toute fusion** (ruff, black, pytest). Une PR dont la CI échoue ne peut pas être fusionnée.
 
 ## 5. Lien avec ClickUp
