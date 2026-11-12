@@ -6,7 +6,7 @@ Docker & Docker Compose
 
 Python 3.x
 
-Virtual environment (recommended)
+Virtual environment (recommended) 
 
 Step 1: Environment Variables Setup
 Create a .env file in the root of the backend directory (next to manage.py) and copy the contents from .env.example.
