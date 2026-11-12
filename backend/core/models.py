@@ -43,7 +43,7 @@ class Filiere(models.Model):
     abrv = models.CharField(max_length=50, unique=True, blank=True, default="")
     nom = models.CharField(max_length=100)
     departement = models.ForeignKey(
-        Departement, on_delete=models.RESTRICT, db_column='id_departement'
+        Departement, on_delete=models.RESTRICT, db_column="id_departement"
     )
 
     def __str__(self):
@@ -55,7 +55,7 @@ class Admin(models.Model):
         Utilisateur,
         on_delete=models.CASCADE,
         primary_key=True,
-        db_column='id_utilisateur',
+        db_column="id_utilisateur",
     )
     passkey = models.CharField(max_length=100)
 
@@ -68,7 +68,7 @@ class Organisateur(models.Model):
         Utilisateur,
         on_delete=models.CASCADE,
         primary_key=True,
-        db_column='id_utilisateur',
+        db_column="id_utilisateur",
     )
     telephone = models.CharField(max_length=50, blank=True, default="")
 
@@ -81,14 +81,14 @@ class Professeur(models.Model):
         Utilisateur,
         on_delete=models.CASCADE,
         primary_key=True,
-        db_column='id_utilisateur',
+        db_column="id_utilisateur",
     )
     code_prof = models.CharField(max_length=50, unique=True)
     departement = models.ForeignKey(
-        Departement, on_delete=models.RESTRICT, db_column='id_departement'
+        Departement, on_delete=models.RESTRICT, db_column="id_departement"
     )
     filieres_enseignees = models.ManyToManyField(
-        Filiere, related_name='professeurs', db_table='Enseigner'
+        Filiere, related_name="professeurs", db_table="Enseigner"
     )
 
     def __str__(self):
@@ -103,11 +103,11 @@ class Etudiant(models.Model):
         Utilisateur,
         on_delete=models.CASCADE,
         primary_key=True,
-        db_column='id_utilisateur',
+        db_column="id_utilisateur",
     )
     code_apogee = models.CharField(max_length=50, unique=True)
     filiere = models.ForeignKey(
-        Filiere, on_delete=models.RESTRICT, db_column='id_filiere'
+        Filiere, on_delete=models.RESTRICT, db_column="id_filiere"
     )
 
     def __str__(self):
@@ -119,10 +119,10 @@ class Club(models.Model):
     nom = models.CharField(max_length=100, unique=True)
     logo_url = models.URLField(max_length=255, blank=True, default="")
     professeur = models.ForeignKey(
-        Professeur, on_delete=models.CASCADE, db_column='id_utilisateur'
+        Professeur, on_delete=models.CASCADE, db_column="id_utilisateur"
     )
     membres = models.ManyToManyField(
-        Etudiant, related_name='clubs_rejoints', db_table='Rejoindre'
+        Etudiant, related_name="clubs_rejoints", db_table="Rejoindre"
     )
 
     def __str__(self):
@@ -142,17 +142,17 @@ class Evenement(models.Model):
     status = models.CharField(max_length=50, blank=True, default="")
 
     organisateur = models.ForeignKey(
-        Organisateur, on_delete=models.RESTRICT, db_column='id_utilisateur'
+        Organisateur, on_delete=models.RESTRICT, db_column="id_utilisateur"
     )
 
     categories = models.ManyToManyField(
-        Categorie, related_name='evenements', db_table='Appartenir'
+        Categorie, related_name="evenements", db_table="Appartenir"
     )
     clubs_gestionnaires = models.ManyToManyField(
-        Club, related_name='evenements_geres', db_table='Gerer'
+        Club, related_name="evenements_geres", db_table="Gerer"
     )
     inscrits = models.ManyToManyField(
-        Utilisateur, through='Inscription', related_name='evenements_inscrits'
+        Utilisateur, through="Inscription", related_name="evenements_inscrits"
     )
 
     def __str__(self):
@@ -165,10 +165,10 @@ class Notification(models.Model):
     lu = models.BooleanField(default=False)
     datecreation = models.DateTimeField(auto_now_add=True)
     utilisateur = models.ForeignKey(
-        Utilisateur, on_delete=models.CASCADE, db_column='id_utilisateur'
+        Utilisateur, on_delete=models.CASCADE, db_column="id_utilisateur"
     )
     evenements = models.ManyToManyField(
-        Evenement, related_name='notifications', db_table='Concerner_Notif'
+        Evenement, related_name="notifications", db_table="Concerner_Notif"
     )
 
     def __str__(self):
@@ -179,10 +179,10 @@ class Favori(models.Model):
     id = models.BigAutoField(primary_key=True)
     datecreation = models.DateTimeField(auto_now_add=True)
     evenement = models.ForeignKey(
-        Evenement, on_delete=models.CASCADE, db_column='id_evenement'
+        Evenement, on_delete=models.CASCADE, db_column="id_evenement"
     )
     utilisateur = models.ForeignKey(
-        Utilisateur, on_delete=models.CASCADE, db_column='id_utilisateur'
+        Utilisateur, on_delete=models.CASCADE, db_column="id_utilisateur"
     )
 
     def __str__(self):
@@ -194,24 +194,24 @@ class Favori(models.Model):
 # ==========================================
 class Inscription(models.Model):
     STATUT_CHOICES = [
-        ('CONFIRMEE', 'Confirmée'),
-        ('LISTE_ATTENTE', 'Liste d\'attente'),
-        ('ANNULEE', 'Annulée'),
+        ("CONFIRMEE", "Confirmée"),
+        ("LISTE_ATTENTE", "Liste d'attente"),
+        ("ANNULEE", "Annulée"),
     ]
 
     utilisateur = models.ForeignKey(
-        Utilisateur, on_delete=models.CASCADE, db_column='id_utilisateur'
+        Utilisateur, on_delete=models.CASCADE, db_column="id_utilisateur"
     )
     evenement = models.ForeignKey(
-        Evenement, on_delete=models.CASCADE, db_column='id_evenement'
+        Evenement, on_delete=models.CASCADE, db_column="id_evenement"
     )
     date_inscription = models.DateTimeField(auto_now_add=True)
     statut = models.CharField(
-        max_length=20, choices=STATUT_CHOICES, default='LISTE_ATTENTE'
+        max_length=20, choices=STATUT_CHOICES, default="LISTE_ATTENTE"
     )
 
     class Meta:
-        db_table = 'inscrire'
+        db_table = "inscrire"
 
     def __str__(self):
         return f"{self.utilisateur.nom} in {self.evenement.titre} ({self.statut})"
