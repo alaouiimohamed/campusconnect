@@ -72,16 +72,38 @@ py -3.12 -m venv .venv                  # macOS/Linux : python3.12 -m venv .venv
 .venv\Scripts\activate                  # macOS/Linux : source .venv/bin/activate
 pip install -r requirements-dev.txt
 cp .env.example .env                    # puis renseigner SECRET_KEY et DATABASE_URL
-python manage.py migrate core           # active pgvector
+python manage.py migrate                # pgvector + tables (utilisateurs, auth, admin...)
+python manage.py createsuperuser        # optionnel : compte ADMIN pour /admin/
 python manage.py runserver
 ```
 
 Vérifier : <http://localhost:8000/api/health/> doit renvoyer `{"status": "ok"}`.
 Si la base est injoignable, l'endpoint répond `503` avec `{"status": "error", ...}`.
 
-> ⚠️ Tant que le modèle utilisateur personnalisé (US01, `AUTH_USER_MODEL`) n'est pas fusionné,
-> ne lancez **pas** `python manage.py migrate` sans argument : cela créerait les tables `auth`
-> par défaut, incompatibles avec le futur modèle utilisateur.
+> ℹ️ Depuis la US01, le modèle utilisateur personnalisé (`AUTH_USER_MODEL = "accounts.User"`)
+> est en place : `python manage.py migrate` **sans argument** est désormais possible et
+> recommandé.
+
+### Modèle utilisateur (US01)
+
+- App `accounts`, modèle `accounts.User` (hérite de `AbstractUser`, sans `username`).
+- Identifiant de connexion : `email` (unique, enregistré en minuscules).
+- Champs : `first_name`, `last_name`, `email`, `role`, `date_joined`.
+- `role` : `ETUDIANT` (défaut), `ORGANISATEUR`, `PROFESSEUR`, `ADMIN`.
+- Les tables de profil (Etudiant, Organisateur, Professeur...) doivent pointer vers
+  l'utilisateur avec `settings.AUTH_USER_MODEL`, jamais en important `User` directement :
+
+```python
+from django.conf import settings
+from django.db import models
+
+class Etudiant(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
+    )
+```
+
+Endpoints : voir [docs/api.md](docs/api.md).
 
 ### 4. Tests et qualité
 
