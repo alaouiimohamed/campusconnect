@@ -4,17 +4,23 @@
  * Police : Poppins, chargée depuis Google Fonts dans index.html.
  */
 :root {
-  /* Couleurs de la charte */
-  --color-primary: #1c837f;
-  --color-accent: #ecc09b;
-  --color-bg: #faf3eb;
-  --color-surface: #ffffff;
+  /* Couleurs officielles de la charte (fournies par Salma) */
+  /* Boutons principaux, liens, logo texte, panneau de connexion */
+  --color-primary: #1e847f;
+  /* Étiquettes, bannière d'accueil, boutons sur panneau noir, décors */
+  --color-accent: #ecc19c;
+  /* Texte, panneaux sombres, vignettes */
   --color-dark: #000000;
+  /* Cartes, texte sur teal */
+  --color-surface: #ffffff;
+  /* Fond de page – à confirmer par Salma */
+  --color-bg: #faf3eb;
 
   /* Couleurs sémantiques (dérivées) */
   --color-text: var(--color-dark);
   --color-text-muted: #5c5c5c;
   --color-success: var(--color-primary);
+  /* Rouge d'erreur – à confirmer par Salma */
   --color-danger: #b42318;
   --color-border: #eadfd3;
   --shadow-card: 0 4px 24px rgb(0 0 0 / 6%);
