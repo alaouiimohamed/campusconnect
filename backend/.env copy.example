@@ -1,3 +1,0 @@
-POSTGRES_DB=SynapseFpk
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=your_secure_password_here

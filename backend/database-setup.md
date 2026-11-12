@@ -9,15 +9,19 @@ Python 3.x
 Virtual environment (recommended) 
 
 Step 1: Environment Variables Setup
-Create a .env file in the root of the backend directory (next to manage.py) and copy the contents from .env.example.
+From the backend directory, copy `.env.example` to `.env` and set the required values.
 
-Crucial Note: We are using 127.0.0.1 and port 5433 to prevent conflicts with any local PostgreSQL instances running on Windows.
+Docker Compose reads `backend/.env` for the PostgreSQL container. The host connection uses
+`127.0.0.1:5433` (mapped to the container's PostgreSQL port `5432`).
 
-SECRET_KEY=django-insecure-your-secret-key-here
-POSTGRES_DB=SynapseFpk
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=admin
-DATABASE_URL=postgres://admin:admin@127.0.0.1:5433/SynapseFpk
+SECRET_KEY=<generate-a-unique-secret-key>
+POSTGRES_DB=campusconnect
+POSTGRES_USER=campusconnect
+POSTGRES_PASSWORD=<choose-a-strong-local-password>
+DATABASE_URL=postgres://campusconnect:<choose-a-strong-local-password>@127.0.0.1:5433/campusconnect
+
+Use the same password in `POSTGRES_PASSWORD` and `DATABASE_URL`. URL-encode reserved
+characters if the password contains them. Never commit `backend/.env`.
 
 Step 2: Start the Database (Docker)
 We are using the pgvector/pgvector:pg16 image for our database to support the MVP 2 AI features (Vector Embeddings).
@@ -26,7 +30,7 @@ Open your terminal in the directory containing docker-compose.yml.
 
 Run the following command to start the container in the background:
 
-docker-compose up -d
+docker compose up -d
 
 
 

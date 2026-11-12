@@ -1,217 +1,270 @@
+"""Modèles métier de CampusConnect (app core).
+
+Traduction en Django du MLD de Wassim (init_db.sql), avec les corrections :
+- plus de table Utilisateur : toutes les relations vers un utilisateur
+  pointent vers settings.AUTH_USER_MODEL (accounts.User, créé par la US01) ;
+- clés primaires générées par Django (BigAutoField) ;
+- organisateur d'un événement en RESTRICT ;
+- description en TextField, champ "lieu" texte, latitude/longitude facultatives ;
+- RESTRICT au lieu de CASCADE depuis Departement, Filiere et Professeur ;
+- inscription avec date et statut, sans doublon possible.
+
+Les tables d'association du MLD deviennent des ManyToManyField :
+Appartenir, Concerner_Notif, Rejoindre, Gerer et Enseigner.
+"""
+
+from django.conf import settings
 from django.db import models
 
 
 # ==========================================
-# 1. INDEPENDENT PARENT TABLES
+# 1. Tables de référence
 # ==========================================
 class Departement(models.Model):
-    id_departement = models.BigAutoField(primary_key=True)
-    nom = models.CharField(max_length=100)
+    nom = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ["nom"]
 
     def __str__(self):
         return self.nom
 
 
-class Utilisateur(models.Model):
-    id_utilisateur = models.BigAutoField(primary_key=True)
-    prenom = models.CharField(max_length=100)
+class Filiere(models.Model):
     nom = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100, unique=True)
-    motdepasse = models.CharField(max_length=255)
-    role = models.CharField(max_length=50)
-    datecreation = models.DateTimeField(auto_now_add=True)
+    abrv = models.CharField(max_length=50, unique=True)
+    departement = models.ForeignKey(
+        Departement, on_delete=models.RESTRICT, related_name="filieres"
+    )
+
+    class Meta:
+        ordering = ["nom"]
 
     def __str__(self):
-        return f"{self.prenom} {self.nom} ({self.role})"
+        return self.abrv
 
 
 class Categorie(models.Model):
-    id_categorie = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, default="")
-    abrv = models.CharField(max_length=50, blank=True, default="")
+    nom = models.CharField(max_length=100, unique=True)
+    description = models.CharField(max_length=255, blank=True)
+    abrv = models.CharField(max_length=50, blank=True)
 
-    def __str__(self):
-        return self.name
-
-
-# ==========================================
-# 2. FIRST-LEVEL CHILD TABLES & ROLES
-# ==========================================
-class Filiere(models.Model):
-    id_filiere = models.BigAutoField(primary_key=True)
-    abrv = models.CharField(max_length=50, unique=True, blank=True, default="")
-    nom = models.CharField(max_length=100)
-    departement = models.ForeignKey(
-        Departement, on_delete=models.RESTRICT, db_column="id_departement"
-    )
+    class Meta:
+        ordering = ["nom"]
 
     def __str__(self):
         return self.nom
 
 
+# ==========================================
+# 2. Profils, liés en 1-1 à accounts.User
+#    (le rôle est porté par User.role)
+# ==========================================
 class Admin(models.Model):
-    utilisateur = models.OneToOneField(
-        Utilisateur,
+    """Profil administrateur. Le champ passkey du MLD est retiré :
+    l'administrateur se connecte avec son compte (role ADMIN)."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         primary_key=True,
-        db_column="id_utilisateur",
+        related_name="profil_admin",
     )
-    passkey = models.CharField(max_length=100)
 
     def __str__(self):
-        return f"Admin: {self.utilisateur.prenom} {self.utilisateur.nom}"
+        return f"Admin : {self.user}"
 
 
 class Organisateur(models.Model):
-    utilisateur = models.OneToOneField(
-        Utilisateur,
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         primary_key=True,
-        db_column="id_utilisateur",
+        related_name="profil_organisateur",
     )
-    telephone = models.CharField(max_length=50, blank=True, default="")
+    telephone = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
-        return f"Organisateur: {self.utilisateur.prenom} {self.utilisateur.nom}"
+        return f"Organisateur : {self.user}"
 
 
 class Professeur(models.Model):
-    utilisateur = models.OneToOneField(
-        Utilisateur,
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         primary_key=True,
-        db_column="id_utilisateur",
+        related_name="profil_professeur",
     )
     code_prof = models.CharField(max_length=50, unique=True)
     departement = models.ForeignKey(
-        Departement, on_delete=models.RESTRICT, db_column="id_departement"
+        Departement, on_delete=models.RESTRICT, related_name="professeurs"
     )
-    filieres_enseignees = models.ManyToManyField(
-        Filiere, related_name="professeurs", db_table="Enseigner"
-    )
+    # Ancienne table Enseigner
+    filieres = models.ManyToManyField(Filiere, related_name="professeurs", blank=True)
 
     def __str__(self):
-        return f"Pr. {self.utilisateur.prenom} {self.utilisateur.nom}"
+        return f"Professeur : {self.user}"
 
 
-# ==========================================
-# 3. SECOND & THIRD-LEVEL CHILD TABLES
-# ==========================================
 class Etudiant(models.Model):
-    utilisateur = models.OneToOneField(
-        Utilisateur,
+    """Créé quand l'étudiant complète son profil (après l'inscription US01)."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         primary_key=True,
-        db_column="id_utilisateur",
+        related_name="profil_etudiant",
     )
     code_apogee = models.CharField(max_length=50, unique=True)
     filiere = models.ForeignKey(
-        Filiere, on_delete=models.RESTRICT, db_column="id_filiere"
+        Filiere, on_delete=models.RESTRICT, related_name="etudiants"
     )
 
     def __str__(self):
-        return f"Etudiant: {self.utilisateur.prenom} {self.utilisateur.nom}"
+        return f"{self.code_apogee} : {self.user}"
 
 
+# ==========================================
+# 3. Clubs et événements
+# ==========================================
 class Club(models.Model):
-    id_club = models.BigAutoField(primary_key=True)
     nom = models.CharField(max_length=100, unique=True)
-    logo_url = models.URLField(max_length=255, blank=True, default="")
-    professeur = models.ForeignKey(
-        Professeur, on_delete=models.CASCADE, db_column="id_utilisateur"
+    logo_url = models.URLField(max_length=255, blank=True)
+    responsable = models.ForeignKey(
+        Professeur, on_delete=models.RESTRICT, related_name="clubs_geres"
     )
-    membres = models.ManyToManyField(
-        Etudiant, related_name="clubs_rejoints", db_table="Rejoindre"
-    )
+    # Ancienne table Rejoindre
+    membres = models.ManyToManyField(Etudiant, related_name="clubs", blank=True)
+
+    class Meta:
+        ordering = ["nom"]
 
     def __str__(self):
         return self.nom
 
 
 class Evenement(models.Model):
-    id_evenement = models.BigAutoField(primary_key=True)
+    class Statut(models.TextChoices):
+        BROUILLON = "BROUILLON", "Brouillon"
+        EN_ATTENTE = "EN_ATTENTE", "En attente de validation"
+        PUBLIE = "PUBLIE", "Publié"
+        COMPLET = "COMPLET", "Complet"
+        EN_COURS = "EN_COURS", "En cours"
+        TERMINE = "TERMINE", "Terminé"
+        ANNULE = "ANNULE", "Annulé"
+
     titre = models.CharField(max_length=150)
-    description = models.TextField(blank=True, default="")
-    lieu = models.TextField()
-    datedebut = models.DateTimeField(null=True, blank=True)
-    datefin = models.DateTimeField(null=True, blank=True)
+    description = models.TextField(blank=True)
+    date_debut = models.DateTimeField(null=True, blank=True)
+    date_fin = models.DateTimeField(null=True, blank=True)
+    lieu = models.CharField(max_length=150)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     capacite = models.PositiveIntegerField(null=True, blank=True)
-    status = models.CharField(max_length=50, blank=True, default="")
-
+    statut = models.CharField(
+        max_length=20, choices=Statut.choices, default=Statut.BROUILLON
+    )
     organisateur = models.ForeignKey(
-        Organisateur, on_delete=models.RESTRICT, db_column="id_utilisateur"
+        Organisateur, on_delete=models.RESTRICT, related_name="evenements"
+    )
+    # Ancienne table Appartenir
+    categories = models.ManyToManyField(
+        Categorie, related_name="evenements", blank=True
+    )
+    # Ancienne table Gerer
+    clubs = models.ManyToManyField(Club, related_name="evenements", blank=True)
+    # Ancienne table inscrire, via le modèle Inscription
+    inscrits = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through="Inscription",
+        related_name="evenements_inscrits",
+        blank=True,
     )
 
-    categories = models.ManyToManyField(
-        Categorie, related_name="evenements", db_table="Appartenir"
-    )
-    clubs_gestionnaires = models.ManyToManyField(
-        Club, related_name="evenements_geres", db_table="Gerer"
-    )
-    inscrits = models.ManyToManyField(
-        Utilisateur, through="Inscription", related_name="evenements_inscrits"
-    )
+    class Meta:
+        ordering = ["date_debut"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(capacite__gt=0) | models.Q(capacite__isnull=True),
+                name="evenement_capacite_positive",
+            ),
+        ]
 
     def __str__(self):
         return self.titre
 
 
-class Notification(models.Model):
-    id_notification = models.BigAutoField(primary_key=True)
-    message = models.CharField(max_length=255)
-    lu = models.BooleanField(default=False)
-    datecreation = models.DateTimeField(auto_now_add=True)
-    utilisateur = models.ForeignKey(
-        Utilisateur, on_delete=models.CASCADE, db_column="id_utilisateur"
-    )
-    evenements = models.ManyToManyField(
-        Evenement, related_name="notifications", db_table="Concerner_Notif"
-    )
-
-    def __str__(self):
-        return f"Notif to {self.utilisateur.nom}: {self.message[:20]}..."
-
-
-class Favori(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    datecreation = models.DateTimeField(auto_now_add=True)
-    evenement = models.ForeignKey(
-        Evenement, on_delete=models.CASCADE, db_column="id_evenement"
-    )
-    utilisateur = models.ForeignKey(
-        Utilisateur, on_delete=models.CASCADE, db_column="id_utilisateur"
-    )
-
-    def __str__(self):
-        return f"Favori: {self.utilisateur.nom} -> {self.evenement.titre}"
-
-
 # ==========================================
-# 4. CUSTOM INTERMEDIATE TABLES (Many-to-Many with extra fields)
+# 4. Inscriptions, favoris, notifications
 # ==========================================
 class Inscription(models.Model):
-    STATUT_CHOICES = [
-        ("CONFIRMEE", "Confirmée"),
-        ("LISTE_ATTENTE", "Liste d'attente"),
-        ("ANNULEE", "Annulée"),
-    ]
+    class Statut(models.TextChoices):
+        CONFIRMEE = "CONFIRMEE", "Confirmée"
+        LISTE_ATTENTE = "LISTE_ATTENTE", "Liste d'attente"
+        ANNULEE = "ANNULEE", "Annulée"
 
-    utilisateur = models.ForeignKey(
-        Utilisateur, on_delete=models.CASCADE, db_column="id_utilisateur"
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="inscriptions",
     )
     evenement = models.ForeignKey(
-        Evenement, on_delete=models.CASCADE, db_column="id_evenement"
+        Evenement, on_delete=models.CASCADE, related_name="inscriptions"
     )
     date_inscription = models.DateTimeField(auto_now_add=True)
     statut = models.CharField(
-        max_length=20, choices=STATUT_CHOICES, default="LISTE_ATTENTE"
+        max_length=20, choices=Statut.choices, default=Statut.CONFIRMEE
     )
 
     class Meta:
-        db_table = "inscrire"
+        ordering = ["-date_inscription"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "evenement"], name="inscription_unique"
+            ),
+        ]
 
     def __str__(self):
-        return f"{self.utilisateur.nom} in {self.evenement.titre} ({self.statut})"
+        return f"{self.user} → {self.evenement}"
+
+
+class Favori(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="favoris",
+    )
+    evenement = models.ForeignKey(
+        Evenement, on_delete=models.CASCADE, related_name="favoris"
+    )
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date_creation"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "evenement"], name="favori_unique"),
+        ]
+
+    def __str__(self):
+        return f"{self.user} ★ {self.evenement}"
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    message = models.CharField(max_length=255)
+    lu = models.BooleanField(default=False)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    # Ancienne table Concerner_Notif
+    evenements = models.ManyToManyField(
+        Evenement, related_name="notifications", blank=True
+    )
+
+    class Meta:
+        ordering = ["-date_creation"]
+
+    def __str__(self):
+        return f"Notification pour {self.user} : {self.message[:40]}"
