@@ -106,6 +106,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    # Limites par adresse IP pour les endpoints publics sensibles.
+    "DEFAULT_THROTTLE_RATES": {
+        "register": env("REGISTER_THROTTLE_RATE", default="10/hour"),
+    },
 }
 if DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
