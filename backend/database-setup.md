@@ -11,17 +11,18 @@ Virtual environment (recommended)
 Step 1: Environment Variables Setup
 From the backend directory, copy `.env.example` to `.env` and set the required values.
 
-Docker Compose reads `backend/.env` for the PostgreSQL container. The host connection uses
-`127.0.0.1:5432` (mapped to the container's PostgreSQL port `5432`).
+Docker Compose does not read `backend/.env`: the PostgreSQL container settings are defined
+directly in `docker-compose.yml` (database `campusconnect`, user `campusconnect`, password
+`campusconnect`). The container port `5432` is published on the host as `127.0.0.1:5432`.
+
+In `backend/.env`, set at least:
 
 SECRET_KEY=<generate-a-unique-secret-key>
-POSTGRES_DB=campusconnect
-POSTGRES_USER=campusconnect
-POSTGRES_PASSWORD=<choose-a-strong-local-password>
-DATABASE_URL=postgres://campusconnect:<choose-a-strong-local-password>@127.0.0.1:5432/campusconnect
+DATABASE_URL=postgres://campusconnect:campusconnect@127.0.0.1:5432/campusconnect
 
-Use the same password in `POSTGRES_PASSWORD` and `DATABASE_URL`. URL-encode reserved
-characters if the password contains them. Never commit `backend/.env`.
+These credentials are for local development only. To use Neon instead of Docker, paste the
+Neon connection string into `DATABASE_URL` (see `backend/.env.example`). Never commit
+`backend/.env`.
 
 Step 2: Start the Database (Docker)
 We are using the pgvector/pgvector:pg16 image for our database to support the MVP 2 AI features (Vector Embeddings).
@@ -48,4 +49,4 @@ If successful, you will see a list of OK messages for each applied migration.
 🛠️ Developer Notes (Updates & Architecture Decisions)
 AI Vector Support: The Docker configuration now uses pgvector to support future AI functionalities.
 
-Data Integrity (Evenement model): The organisateur foreign key in the Evenement model has been set to on_delete=models.PROTECT. This prevents the deletion of an organizer if they still have events attached to them, avoiding orphan events in the database.
+Data Integrity (Evenement model): The organisateur foreign key in the Evenement model has been set to on_delete=models.RESTRICT. This prevents the deletion of an organizer if they still have events attached to them, avoiding orphan events in the database.
