@@ -1,0 +1,57 @@
+/*
+ * Design system CampusConnect – seule source des couleurs, polices,
+ * rayons et espacements. Les composants utilisent uniquement ces variables.
+ * Police : Poppins, chargée depuis Google Fonts dans index.html.
+ */
+:root {
+  /* Couleurs officielles de la charte (fournies par Salma) */
+  /* Boutons principaux, liens, logo texte, panneau de connexion */
+  --color-primary: #1e847f;
+  /* Étiquettes, bannière d'accueil, boutons sur panneau noir, décors */
+  --color-accent: #ecc19c;
+  /* Texte, panneaux sombres, vignettes */
+  --color-dark: #000000;
+  /* Cartes, texte sur teal */
+  --color-surface: #ffffff;
+  /* Fond de page – à confirmer par Salma */
+  --color-bg: #faf3eb;
+
+  /* Couleurs sémantiques (dérivées) */
+  --color-text: var(--color-dark);
+  --color-text-muted: #5c5c5c;
+  --color-success: var(--color-primary);
+  /* Rouge d'erreur – à confirmer par Salma */
+  --color-danger: #b42318;
+  --color-border: #eadfd3;
+  --shadow-card: 0 4px 24px rgb(0 0 0 / 6%);
+
+  /* Typographie */
+  --font-family-base:
+    "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-title: clamp(2rem, 4vw + 1rem, 3.5rem);
+  --line-height-base: 1.5;
+
+  /* Rayons */
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* Espacements de base (échelle de 4 px) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Mise en page */
+  --content-max-width: 40rem;
+  --status-dot-size: 0.625rem;
+}
