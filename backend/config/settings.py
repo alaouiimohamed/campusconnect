@@ -35,7 +35,11 @@ INSTALLED_APPS = [
     "corsheaders",
     # Projet
     "core",
+    "accounts",
 ]
+
+# Modèle utilisateur personnalisé (US01) : email comme identifiant, rôle intégré.
+AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -102,6 +106,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    # Limites par adresse IP pour les endpoints publics sensibles.
+    "DEFAULT_THROTTLE_RATES": {
+        "register": env("REGISTER_THROTTLE_RATE", default="10/hour"),
+    },
 }
 if DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
