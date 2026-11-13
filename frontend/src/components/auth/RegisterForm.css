@@ -1,0 +1,103 @@
+.register-card {
+  width: 100%;
+  max-width: var(--content-max-width);
+  padding: var(--space-6);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.register-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+/* Pastille sable : icône noire (jamais de blanc sur sable) */
+.register-card__badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-16);
+  height: var(--space-16);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.register-card__badge .icon {
+  width: var(--space-8);
+  height: var(--space-8);
+}
+
+.register-card__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.register-card__subtitle {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.register-card__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.register-card__alert {
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-error) solid var(--color-danger);
+  border-radius: var(--radius-input);
+  color: var(--color-danger);
+  font-weight: var(--font-weight-medium);
+}
+
+.register-card__success {
+  color: var(--color-success);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Blanc sur teal : 16 px minimum, graisse semi-grasse (section 3) */
+.register-card__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--control-height);
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-action);
+  color: var(--color-on-action);
+  font: inherit;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.register-card__submit .icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+
+.register-card__submit:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-action);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.register-card__submit:disabled {
+  cursor: progress;
+}
+
+@media (min-width: 768px) {
+  .register-card {
+    padding: var(--space-8);
+  }
+}

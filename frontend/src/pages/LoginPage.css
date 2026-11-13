@@ -1,0 +1,11 @@
+.login-page {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-12) var(--space-4);
+}
+
+.login-page__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
