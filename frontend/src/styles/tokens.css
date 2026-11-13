@@ -1,33 +1,44 @@
 /*
  * Design system CampusConnect – seule source des couleurs, polices,
  * rayons et espacements. Les composants utilisent uniquement ces variables.
- * Police : Poppins, chargée depuis Google Fonts dans index.html.
+ * Référence : docs/design-tokens.md (validé par Salma, UX/UI).
+ * Polices : Poppins (titres) et Inter (texte), chargées depuis Google Fonts
+ * dans index.html.
  */
 :root {
-  /* Couleurs officielles de la charte (fournies par Salma) */
-  /* Boutons principaux, liens, logo texte, panneau de connexion */
+  /* Palette principale */
+  /* Teal : boutons principaux, liens, texte de marque, panneau de connexion */
   --color-primary: #1e847f;
-  /* Étiquettes, bannière d'accueil, boutons sur panneau noir, décors */
+  /* Sable : étiquettes, bannière d'accueil, boutons sur fond noir, décors */
   --color-accent: #ecc19c;
-  /* Texte, panneaux sombres, vignettes */
+  /* Noir : texte, panneaux sombres, vignettes */
   --color-dark: #000000;
-  /* Cartes, texte sur teal */
+  /* Blanc : cartes, texte sur teal */
   --color-surface: #ffffff;
-  /* Fond de page – à confirmer par Salma */
-  --color-bg: #faf3eb;
+  /* Fond de page (crème) */
+  --color-bg: #faf4ec;
 
-  /* Couleurs sémantiques (dérivées) */
+  /* Couleurs sémantiques */
   --color-text: var(--color-dark);
-  --color-text-muted: #5c5c5c;
+  --color-text-muted: #4a4a4a;
   --color-success: var(--color-primary);
-  /* Rouge d'erreur – à confirmer par Salma */
+  /* Rouge d'erreur – décision en attente (docs/design-tokens.md, section 7) */
   --color-danger: #b42318;
-  --color-border: #eadfd3;
-  --shadow-card: 0 4px 24px rgb(0 0 0 / 6%);
+  --color-border: #eadccb;
+  --shadow-card: 0 8px 24px rgb(120 84 48 / 14%);
+
+  /* Jetons par rôle – thème clair (le thème sombre est hors MVP 1) */
+  /* Fond des boutons */
+  --color-action: var(--color-primary);
+  /* Texte des boutons */
+  --color-on-action: #ffffff;
+  /* Liens, logo texte, grands chiffres */
+  --color-brand-text: var(--color-primary);
 
   /* Typographie */
-  --font-family-base:
+  --font-family-heading:
     "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-family-base: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -39,7 +50,9 @@
   --line-height-base: 1.5;
 
   /* Rayons */
-  --radius-card: 16px;
+  --radius-card: 20px;
+  --radius-button: 14px;
+  --radius-input: 16px;
   --radius-pill: 999px;
 
   /* Espacements de base (échelle de 4 px) */
