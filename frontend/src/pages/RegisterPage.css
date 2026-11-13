@@ -1,0 +1,22 @@
+.register-page {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+.register-page__main {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+
+@media (min-width: 900px) {
+  .register-page {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+
+  .register-page__main {
+    align-items: center;
+    padding: var(--space-12) var(--space-8);
+  }
+}
