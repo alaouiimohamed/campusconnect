@@ -15,7 +15,7 @@
 }
 
 .home__title {
-  color: var(--color-primary);
+  color: var(--color-brand-text);
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-bold);
   line-height: 1.1;
