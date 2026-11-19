@@ -9,7 +9,7 @@ import "./RegisterPage.css";
  * + carte « Créer un compte organisateur ». Le compte est créé avec
  * role=ORGANISATEUR et le nom de l'organisation ; l'e-mail est libre.
  */
-export default function OrganizerRegisterPage({ redirectDelayMs }) {
+export default function OrganizerRegisterPage() {
   useEffect(() => {
     document.title = "Espace organisateur · Synapse";
   }, []);
@@ -20,7 +20,7 @@ export default function OrganizerRegisterPage({ redirectDelayMs }) {
       <main className="register-page__main">
         <div className="register-page__column">
           <AuthTopBar space="organisateur" />
-          <RegisterForm space="organisateur" redirectDelayMs={redirectDelayMs} />
+          <RegisterForm space="organisateur" />
         </div>
       </main>
     </div>

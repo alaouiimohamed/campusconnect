@@ -5,7 +5,37 @@
   padding: var(--space-12) var(--space-4);
 }
 
+.login-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: var(--content-max-width);
+}
+
 .login-page__title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
+}
+
+/* Bandeau de succès : texte noir sur blanc, bordure et icône teal
+   (le succès n'est pas signalé par la seule couleur : icône + texte). */
+.login-page__banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--color-success);
+  border-radius: var(--radius-input);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.login-page__banner .icon {
+  flex-shrink: 0;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  color: var(--color-success);
+  stroke-width: 3;
 }

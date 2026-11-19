@@ -98,11 +98,6 @@
   font-weight: var(--font-weight-medium);
 }
 
-.register-card__success {
-  color: var(--color-success);
-  font-weight: var(--font-weight-semibold);
-}
-
 /* Blanc sur teal : 16 px minimum, graisse semi-grasse (section 3) */
 .register-card__submit {
   display: inline-flex;

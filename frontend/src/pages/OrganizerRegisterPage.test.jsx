@@ -16,10 +16,7 @@ function renderPage() {
   render(
     <MemoryRouter initialEntries={["/organisateur/inscription"]}>
       <Routes>
-        <Route
-          path="/organisateur/inscription"
-          element={<OrganizerRegisterPage redirectDelayMs={100} />}
-        />
+        <Route path="/organisateur/inscription" element={<OrganizerRegisterPage />} />
         <Route path="/inscription" element={<RegisterPage />} />
         <Route path="/connexion" element={<LoginPage />} />
       </Routes>
@@ -214,13 +211,15 @@ describe("OrganizerRegisterPage – validation", () => {
     await fillForm(user, { "Adresse e-mail": "orga@gmail.com" });
     await submit(user);
 
-    expect(await screen.findByText(/^Compte créé/)).toBeInTheDocument();
-    expect(screen.getByLabelText("Adresse e-mail")).not.toHaveAttribute("aria-invalid");
+    // Aucune erreur côté client : le compte est créé et la page change.
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Connexion" }),
+    ).toBeInTheDocument();
   });
 });
 
 describe("OrganizerRegisterPage – réponses de l'API", () => {
-  it("201 : envoie role=ORGANISATEUR et l'organisation, puis redirige vers /connexion", async () => {
+  it("201 : envoie role=ORGANISATEUR et l'organisation, puis affiche Connexion avec le bandeau", async () => {
     const fetchMock = mockFetchResponse(
       {
         id: 2,
@@ -236,7 +235,12 @@ describe("OrganizerRegisterPage – réponses de l'API", () => {
     await fillForm(user, { [ORGANISATION]: "  BDE de la FPK " });
     await submit(user);
 
-    expect(await screen.findByText(/^Compte créé/)).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Connexion" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Votre compte a été créé. Vous pouvez maintenant vous connecter.",
+    );
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, options] = fetchMock.mock.calls[0];
     expect(url).toBe(REGISTER_URL);
@@ -250,10 +254,6 @@ describe("OrganizerRegisterPage – réponses de l'API", () => {
       role: "ORGANISATEUR",
       organisation: "BDE de la FPK",
     });
-
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Connexion" }),
-    ).toBeInTheDocument();
   });
 
   it("400 : affiche l'erreur d'organisation sous le champ", async () => {

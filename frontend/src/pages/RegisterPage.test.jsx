@@ -14,7 +14,7 @@ function renderPage() {
   render(
     <MemoryRouter initialEntries={["/inscription"]}>
       <Routes>
-        <Route path="/inscription" element={<RegisterPage redirectDelayMs={100} />} />
+        <Route path="/inscription" element={<RegisterPage />} />
         <Route path="/connexion" element={<LoginPage />} />
         <Route path="/organisateur/inscription" element={<OrganizerRegisterPage />} />
       </Routes>
@@ -268,7 +268,7 @@ describe("RegisterPage – validation", () => {
 });
 
 describe("RegisterPage – réponses de l'API", () => {
-  it("201 : envoie role=ETUDIANT, affiche « Compte créé » puis redirige vers /connexion", async () => {
+  it("201 : envoie role=ETUDIANT puis affiche Connexion avec le bandeau de succès", async () => {
     const fetchMock = mockFetchResponse(
       {
         id: 1,
@@ -284,7 +284,13 @@ describe("RegisterPage – réponses de l'API", () => {
     await fillForm(user, { Nom: "  Benali " });
     await submit(user);
 
-    expect(await screen.findByText(/^Compte créé/)).toBeInTheDocument();
+    // Redirection immédiate (aucun délai) vers Connexion, avec le bandeau.
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Connexion" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Votre compte a été créé. Vous pouvez maintenant vous connecter.",
+    );
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, options] = fetchMock.mock.calls[0];
     expect(url).toBe(REGISTER_URL);
@@ -298,10 +304,6 @@ describe("RegisterPage – réponses de l'API", () => {
       role: "ETUDIANT",
     });
     expect(JSON.parse(options.body)).not.toHaveProperty("organisation");
-
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Connexion" }),
-    ).toBeInTheDocument();
   });
 
   it("400 : affiche l'erreur de l'API sous chaque champ concerné", async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { register } from "../../services/auth";
 import FormField from "../form/FormField";
@@ -47,7 +47,6 @@ const SPACES = {
 };
 
 const MESSAGES = {
-  success: "Compte créé. Redirection vers la page de connexion…",
   tooManyRequests: "Trop de tentatives, réessayez plus tard.",
   network:
     "Impossible de joindre le serveur. Vérifiez votre connexion internet puis réessayez.",
@@ -64,9 +63,11 @@ function messageForError(error) {
  * Carte de création de compte (US01).
  * `space` : "etudiant" (envoie role=ETUDIANT) ou "organisateur"
  * (envoie role=ORGANISATEUR et l'organisation).
- * Après un 201, affiche « Compte créé » puis redirige vers /connexion.
+ * Après un 201, redirige aussitôt vers /connexion avec l'état
+ * { accountCreated: true } : la page Connexion affiche alors le bandeau
+ * « Votre compte a été créé… ».
  */
-export default function RegisterForm({ space = "etudiant", redirectDelayMs = 1500 }) {
+export default function RegisterForm({ space = "etudiant" }) {
   const config = SPACES[space];
   const navigate = useNavigate();
   const formRef = useRef(null);
@@ -75,17 +76,7 @@ export default function RegisterForm({ space = "etudiant", redirectDelayMs = 150
   );
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
-  const [status, setStatus] = useState("idle"); // idle | submitting | success
-
-  // Redirection différée après le succès, annulée si la page est quittée.
-  useEffect(() => {
-    if (status !== "success") return undefined;
-    const timer = setTimeout(
-      () => navigate("/connexion", { replace: true }),
-      redirectDelayMs,
-    );
-    return () => clearTimeout(timer);
-  }, [status, navigate, redirectDelayMs]);
+  const [status, setStatus] = useState("idle"); // idle | submitting
 
   function focusFirstError(fieldErrors) {
     const first = config.fields.find((name) => fieldErrors[name]);
@@ -126,7 +117,7 @@ export default function RegisterForm({ space = "etudiant", redirectDelayMs = 150
         role: config.role,
         ...("organisation" in values && { organisation: values.organisation.trim() }),
       });
-      setStatus("success");
+      navigate("/connexion", { replace: true, state: { accountCreated: true } });
     } catch (error) {
       setStatus("idle");
       if (error?.status === 400) {
@@ -146,7 +137,6 @@ export default function RegisterForm({ space = "etudiant", redirectDelayMs = 150
     value: values[name],
     onChange: handleChange,
     error: errors[name],
-    disabled: status === "success",
   });
 
   return (
@@ -247,10 +237,6 @@ export default function RegisterForm({ space = "etudiant", redirectDelayMs = 150
             Erreur : {formError}
           </p>
         )}
-
-        <p className="register-card__success" role="status">
-          {status === "success" ? MESSAGES.success : ""}
-        </p>
 
         <button
           type="submit"

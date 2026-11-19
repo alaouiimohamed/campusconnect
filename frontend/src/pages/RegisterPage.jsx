@@ -9,7 +9,7 @@ import "./RegisterPage.css";
  * Le compte est créé avec role=ETUDIANT. Le quiz de première connexion est une
  * tâche séparée.
  */
-export default function RegisterPage({ redirectDelayMs }) {
+export default function RegisterPage() {
   useEffect(() => {
     document.title = "Créer un compte · Synapse";
   }, []);
@@ -20,7 +20,7 @@ export default function RegisterPage({ redirectDelayMs }) {
       <main className="register-page__main">
         <div className="register-page__column">
           <AuthTopBar space="etudiant" />
-          <RegisterForm space="etudiant" redirectDelayMs={redirectDelayMs} />
+          <RegisterForm space="etudiant" />
         </div>
       </main>
     </div>
