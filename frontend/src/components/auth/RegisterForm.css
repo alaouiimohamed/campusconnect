@@ -55,7 +55,7 @@
 .register-card__row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  gap: var(--space-4) var(--space-3);
 }
 
 @container (min-width: 22rem) {
@@ -64,9 +64,10 @@
   }
 }
 
-/* Les champs mot de passe (icône + bouton œil) n'affichent leur placeholder
-   en entier (≈ 205 px) qu'à partir de 40rem de formulaire : empilés en dessous. */
-@container (max-width: 39.99rem) {
+/* Les champs mot de passe (icône + bouton œil, 88 px de marges internes)
+   n'affichent leur placeholder en entier (≈ 205 px) qu'à partir de 37.5rem
+   de formulaire (atteint dès ≈ 1260 px d'écran) : empilés en dessous. */
+@container (max-width: 37.49rem) {
   .register-card__row--password {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -133,10 +134,4 @@
 
 .register-card__submit:disabled {
   cursor: progress;
-}
-
-@media (min-width: 768px) {
-  .register-card {
-    padding: var(--space-8);
-  }
 }

@@ -26,6 +26,6 @@
 
   .register-page__main {
     align-items: center;
-    padding: var(--space-12) var(--space-8);
+    padding: var(--space-12) var(--space-4);
   }
 }
