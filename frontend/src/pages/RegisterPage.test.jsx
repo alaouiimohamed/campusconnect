@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import LoginPage from "./LoginPage";
+import OrganizerRegisterPage from "./OrganizerRegisterPage";
 import RegisterPage from "./RegisterPage";
 
 const REGISTER_URL = "http://api.test/api/auth/register/";
@@ -15,6 +16,7 @@ function renderPage() {
       <Routes>
         <Route path="/inscription" element={<RegisterPage redirectDelayMs={100} />} />
         <Route path="/connexion" element={<LoginPage />} />
+        <Route path="/organisateur/inscription" element={<OrganizerRegisterPage />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -34,9 +36,9 @@ async function fillForm(user, overrides = {}) {
   const values = {
     Nom: "Benali",
     Prénom: "Amina",
-    "E-mail universitaire": "amina.benali@usms.ac.ma",
+    "Adresse e-mail": "amina.benali@usms.ac.ma",
     "Mot de passe": MOT_DE_PASSE,
-    "Confirmer le mot de passe": MOT_DE_PASSE,
+    Confirmation: MOT_DE_PASSE,
     ...overrides,
   };
   for (const [label, value] of Object.entries(values)) {
@@ -45,7 +47,7 @@ async function fillForm(user, overrides = {}) {
 }
 
 function submit(user) {
-  return user.click(screen.getByRole("button", { name: "S'inscrire" }));
+  return user.click(screen.getByRole("button", { name: "Créer mon compte" }));
 }
 
 describe("RegisterPage – affichage", () => {
@@ -60,10 +62,12 @@ describe("RegisterPage – affichage", () => {
     expect(document.title).toBe("Créer un compte · Synapse");
   });
 
-  it("affiche les champs dans l'ordre, sans champ « Je suis »", () => {
+  it("affiche les champs dans l'ordre, sans « Je suis » ni organisation", () => {
     renderPage();
 
-    const form = screen.getByRole("button", { name: "S'inscrire" }).closest("form");
+    const form = screen
+      .getByRole("button", { name: "Créer mon compte" })
+      .closest("form");
     const names = [...form.querySelectorAll("input")].map((input) => input.name);
     expect(names).toEqual([
       "last_name",
@@ -76,14 +80,53 @@ describe("RegisterPage – affichage", () => {
     for (const label of [
       "Nom",
       "Prénom",
-      "E-mail universitaire",
+      "Adresse e-mail",
       "Mot de passe",
-      "Confirmer le mot de passe",
+      "Confirmation",
     ]) {
       expect(screen.getByLabelText(label)).toBeVisible();
     }
     expect(screen.queryByLabelText(/je suis/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/organisation/i)).not.toBeInTheDocument();
+  });
+
+  it("place Nom/Prénom et Mot de passe/Confirmation côte à côte", () => {
+    renderPage();
+
+    const pairs = [
+      ["Nom", "Prénom"],
+      ["Mot de passe", "Confirmation"],
+    ];
+    for (const [left, right] of pairs) {
+      const row = screen.getByLabelText(left).closest(".register-card__row");
+      expect(row).not.toBeNull();
+      expect(within(row).getByLabelText(right)).toBeInTheDocument();
+    }
+    expect(
+      screen.getByLabelText("Adresse e-mail").closest(".register-card__row"),
+    ).toBeNull();
+  });
+
+  it("annonce le quiz de première connexion, sans l'afficher", () => {
+    renderPage();
+
+    expect(
+      screen.getByText("Un court quiz vous sera proposé à votre première connexion."),
+    ).toBeVisible();
+    expect(screen.queryByRole("heading", { name: /quiz/i })).not.toBeInTheDocument();
+  });
+
+  it("propose un lien vers l'espace organisateur", async () => {
+    const user = renderPage();
+
+    const link = screen.getByRole("link", { name: "Accéder à l'espace organisateur" });
+    expect(link).toHaveAttribute("href", "/organisateur/inscription");
+
+    await user.click(link);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Créer un compte organisateur" }),
+    ).toBeInTheDocument();
   });
 
   it("n'affiche pas encore la carte « Connexion » (US02)", () => {
@@ -110,10 +153,7 @@ describe("RegisterPage – affichage", () => {
         name: "Afficher la confirmation du mot de passe",
       }),
     );
-    expect(screen.getByLabelText("Confirmer le mot de passe")).toHaveAttribute(
-      "type",
-      "text",
-    );
+    expect(screen.getByLabelText("Confirmation")).toHaveAttribute("type", "text");
   });
 });
 
@@ -132,15 +172,15 @@ describe("RegisterPage – validation", () => {
     expect(screen.getByLabelText("Prénom")).toHaveAccessibleDescription(
       "Erreur : Le prénom est obligatoire.",
     );
-    expect(screen.getByLabelText("E-mail universitaire")).toHaveAccessibleDescription(
-      "Erreur : L'e-mail universitaire est obligatoire.",
+    expect(screen.getByLabelText("Adresse e-mail")).toHaveAccessibleDescription(
+      "Erreur : L'adresse e-mail est obligatoire.",
     );
     expect(screen.getByLabelText("Mot de passe")).toHaveAccessibleDescription(
       "Erreur : Le mot de passe est obligatoire.",
     );
-    expect(
-      screen.getByLabelText("Confirmer le mot de passe"),
-    ).toHaveAccessibleDescription("Erreur : Confirmez le mot de passe.");
+    expect(screen.getByLabelText("Confirmation")).toHaveAccessibleDescription(
+      "Erreur : Confirmez le mot de passe.",
+    );
   });
 
   it("refuse un e-mail invalide et des mots de passe différents", async () => {
@@ -148,19 +188,19 @@ describe("RegisterPage – validation", () => {
     const user = renderPage();
 
     await fillForm(user, {
-      "E-mail universitaire": "amina@",
-      "Confirmer le mot de passe": "Autre-mot-de-passe-1",
+      "Adresse e-mail": "amina@",
+      Confirmation: "Autre-mot-de-passe-1",
     });
     await submit(user);
 
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("E-mail universitaire")).toHaveAccessibleDescription(
+    expect(screen.getByLabelText("Adresse e-mail")).toHaveAccessibleDescription(
       "Erreur : Saisissez une adresse e-mail valide.",
     );
-    expect(
-      screen.getByLabelText("Confirmer le mot de passe"),
-    ).toHaveAccessibleDescription("Erreur : Les mots de passe ne correspondent pas.");
-    expect(screen.getByLabelText("E-mail universitaire")).toHaveFocus();
+    expect(screen.getByLabelText("Confirmation")).toHaveAccessibleDescription(
+      "Erreur : Les mots de passe ne correspondent pas.",
+    );
+    expect(screen.getByLabelText("Adresse e-mail")).toHaveFocus();
   });
 
   it("efface l'erreur d'un champ dès qu'il est corrigé", async () => {
@@ -178,7 +218,7 @@ describe("RegisterPage – validation", () => {
 });
 
 describe("RegisterPage – réponses de l'API", () => {
-  it("201 : envoie les données, affiche « Compte créé » puis redirige vers /connexion", async () => {
+  it("201 : envoie role=ETUDIANT, affiche « Compte créé » puis redirige vers /connexion", async () => {
     const fetchMock = mockFetchResponse(
       {
         id: 1,
@@ -205,9 +245,9 @@ describe("RegisterPage – réponses de l'API", () => {
       email: "amina.benali@usms.ac.ma",
       password: MOT_DE_PASSE,
       password_confirm: MOT_DE_PASSE,
+      role: "ETUDIANT",
     });
-    // Aucun rôle envoyé : l'API attribue ETUDIANT par défaut.
-    expect(JSON.parse(options.body)).not.toHaveProperty("role");
+    expect(JSON.parse(options.body)).not.toHaveProperty("organisation");
 
     expect(
       await screen.findByRole("heading", { level: 1, name: "Connexion" }),
@@ -230,7 +270,7 @@ describe("RegisterPage – réponses de l'API", () => {
     await fillForm(user);
     await submit(user);
 
-    const email = screen.getByLabelText("E-mail universitaire");
+    const email = screen.getByLabelText("Adresse e-mail");
     expect(
       await screen.findByText(
         "Erreur : Un compte existe déjà avec cette adresse email.",
@@ -249,7 +289,7 @@ describe("RegisterPage – réponses de l'API", () => {
     expect(
       screen.getByRole("heading", { name: "Créer un compte" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "S'inscrire" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Créer mon compte" })).toBeEnabled();
   });
 
   it("429 : affiche « Trop de tentatives, réessayez plus tard »", async () => {
@@ -279,7 +319,7 @@ describe("RegisterPage – réponses de l'API", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Erreur : Impossible de joindre le serveur. Vérifiez votre connexion internet puis réessayez.",
     );
-    expect(screen.getByRole("button", { name: "S'inscrire" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Créer mon compte" })).toBeEnabled();
   });
 
   it("erreur serveur inattendue : affiche un message générique", async () => {

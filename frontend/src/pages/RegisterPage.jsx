@@ -4,8 +4,9 @@ import RegisterForm from "../components/auth/RegisterForm";
 import "./RegisterPage.css";
 
 /**
- * Page de création de compte (US01) : panneau teal + carte « Créer un compte ».
- * La carte « Connexion » de la maquette sera ajoutée avec US02.
+ * Inscription de l'espace étudiant (US01) : panneau teal + carte « Créer un compte ».
+ * Le compte est créé avec role=ETUDIANT. Le quiz de première connexion est une
+ * tâche séparée.
  */
 export default function RegisterPage({ redirectDelayMs }) {
   useEffect(() => {
@@ -14,9 +15,9 @@ export default function RegisterPage({ redirectDelayMs }) {
 
   return (
     <div className="register-page">
-      <AuthPanel />
+      <AuthPanel space="etudiant" />
       <main className="register-page__main">
-        <RegisterForm redirectDelayMs={redirectDelayMs} />
+        <RegisterForm space="etudiant" redirectDelayMs={redirectDelayMs} />
       </main>
     </div>
   );

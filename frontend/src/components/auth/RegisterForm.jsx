@@ -1,19 +1,54 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { register } from "../../services/auth";
 import FormField from "../form/FormField";
-import { ArrowRightIcon, LockIcon, MailIcon, UserIcon, UserPlusIcon } from "../icons";
 import {
+  ArrowRightIcon,
+  BuildingIcon,
+  InfoIcon,
+  LockIcon,
+  MailIcon,
+  UserIcon,
+  UserPlusIcon,
+} from "../icons";
+import {
+  ORGANIZER_REGISTER_FIELDS,
   REGISTER_FIELDS,
   parseApiErrors,
   validateRegister,
 } from "./registerValidation";
 import "./RegisterForm.css";
 
-const INITIAL_VALUES = Object.fromEntries(REGISTER_FIELDS.map((name) => [name, ""]));
-
-// Longueur maximale imposée par l'API pour le nom et le prénom.
+// Longueurs maximales imposées par l'API.
 const NAME_MAX_LENGTH = 150;
+const ORGANISATION_MAX_LENGTH = 150;
+
+/** Contenu propre à chaque espace d'inscription. */
+const SPACES = {
+  etudiant: {
+    role: "ETUDIANT",
+    fields: REGISTER_FIELDS,
+    title: "Créer un compte",
+    subtitle: "Rejoignez la communauté universitaire et profitez de tous les services.",
+    emailPlaceholder: "prenom.nom@usms.ac.ma",
+    note: "Un court quiz vous sera proposé à votre première connexion.",
+    submit: "Créer mon compte",
+    switchLink: {
+      to: "/organisateur/inscription",
+      label: "Accéder à l'espace organisateur",
+    },
+  },
+  organisateur: {
+    role: "ORGANISATEUR",
+    fields: ORGANIZER_REGISTER_FIELDS,
+    title: "Créer un compte organisateur",
+    subtitle: "Organisez et publiez vos événements auprès des étudiants du campus.",
+    emailPlaceholder: "contact@organisation.ma",
+    note: "Vos événements sont publiés après validation par l'administrateur.",
+    submit: "Créer un compte organisateur",
+    switchLink: { to: "/inscription", label: "Accéder à l'espace étudiant" },
+  },
+};
 
 const MESSAGES = {
   success: "Compte créé. Redirection vers la page de connexion…",
@@ -30,13 +65,18 @@ function messageForError(error) {
 }
 
 /**
- * Carte « Créer un compte » (US01).
+ * Carte de création de compte (US01).
+ * `space` : "etudiant" (envoie role=ETUDIANT) ou "organisateur"
+ * (envoie role=ORGANISATEUR et l'organisation).
  * Après un 201, affiche « Compte créé » puis redirige vers /connexion.
  */
-export default function RegisterForm({ redirectDelayMs = 1500 }) {
+export default function RegisterForm({ space = "etudiant", redirectDelayMs = 1500 }) {
+  const config = SPACES[space];
   const navigate = useNavigate();
   const formRef = useRef(null);
-  const [values, setValues] = useState(INITIAL_VALUES);
+  const [values, setValues] = useState(() =>
+    Object.fromEntries(config.fields.map((name) => [name, ""])),
+  );
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [status, setStatus] = useState("idle"); // idle | submitting | success
@@ -52,7 +92,7 @@ export default function RegisterForm({ redirectDelayMs = 1500 }) {
   }, [status, navigate, redirectDelayMs]);
 
   function focusFirstError(fieldErrors) {
-    const first = REGISTER_FIELDS.find((name) => fieldErrors[name]);
+    const first = config.fields.find((name) => fieldErrors[name]);
     if (first) formRef.current?.elements.namedItem(first)?.focus();
   }
 
@@ -87,12 +127,14 @@ export default function RegisterForm({ redirectDelayMs = 1500 }) {
         email: values.email.trim(),
         password: values.password,
         password_confirm: values.password_confirm,
+        role: config.role,
+        ...("organisation" in values && { organisation: values.organisation.trim() }),
       });
       setStatus("success");
     } catch (error) {
       setStatus("idle");
       if (error?.status === 400) {
-        const apiErrors = parseApiErrors(error.data);
+        const apiErrors = parseApiErrors(error.data, config.fields);
         setErrors(apiErrors.fields);
         setFormError(apiErrors.form);
         focusFirstError(apiErrors.fields);
@@ -119,11 +161,9 @@ export default function RegisterForm({ redirectDelayMs = 1500 }) {
         </span>
         <div>
           <h1 id="register-title" className="register-card__title">
-            Créer un compte
+            {config.title}
           </h1>
-          <p className="register-card__subtitle">
-            Rejoignez la communauté universitaire et profitez de tous les services.
-          </p>
+          <p className="register-card__subtitle">{config.subtitle}</p>
         </div>
       </header>
 
@@ -133,57 +173,77 @@ export default function RegisterForm({ redirectDelayMs = 1500 }) {
         onSubmit={handleSubmit}
         noValidate
       >
-        <FormField
-          {...fieldProps("last_name")}
-          label="Nom"
-          icon={UserIcon}
-          placeholder="Votre nom"
-          autoComplete="family-name"
-          maxLength={NAME_MAX_LENGTH}
-          required
-        />
-        <FormField
-          {...fieldProps("first_name")}
-          label="Prénom"
-          icon={UserIcon}
-          placeholder="Votre prénom"
-          autoComplete="given-name"
-          maxLength={NAME_MAX_LENGTH}
-          required
-        />
+        <div className="register-card__row">
+          <FormField
+            {...fieldProps("last_name")}
+            label="Nom"
+            icon={UserIcon}
+            placeholder="Votre nom"
+            autoComplete="family-name"
+            maxLength={NAME_MAX_LENGTH}
+            required
+          />
+          <FormField
+            {...fieldProps("first_name")}
+            label="Prénom"
+            icon={UserIcon}
+            placeholder="Votre prénom"
+            autoComplete="given-name"
+            maxLength={NAME_MAX_LENGTH}
+            required
+          />
+        </div>
+        {"organisation" in values && (
+          <FormField
+            {...fieldProps("organisation")}
+            label="Nom de l'organisation ou de l'université"
+            icon={BuildingIcon}
+            placeholder="Ex. : BDE de la FPK"
+            autoComplete="organization"
+            maxLength={ORGANISATION_MAX_LENGTH}
+            required
+          />
+        )}
         <FormField
           {...fieldProps("email")}
-          label="E-mail universitaire"
+          label="Adresse e-mail"
           type="email"
           icon={MailIcon}
-          placeholder="prenom.nom@usms.ac.ma"
+          placeholder={config.emailPlaceholder}
           autoComplete="email"
           inputMode="email"
           spellCheck={false}
           required
         />
-        <FormField
-          {...fieldProps("password")}
-          label="Mot de passe"
-          type="password"
-          icon={LockIcon}
-          placeholder="Choisissez un mot de passe"
-          autoComplete="new-password"
-          revealable
-          revealLabel="le mot de passe"
-          required
-        />
-        <FormField
-          {...fieldProps("password_confirm")}
-          label="Confirmer le mot de passe"
-          type="password"
-          icon={LockIcon}
-          placeholder="Saisissez-le à nouveau"
-          autoComplete="new-password"
-          revealable
-          revealLabel="la confirmation du mot de passe"
-          required
-        />
+        <div className="register-card__row">
+          <FormField
+            {...fieldProps("password")}
+            label="Mot de passe"
+            type="password"
+            icon={LockIcon}
+            placeholder="Choisissez un mot de passe"
+            autoComplete="new-password"
+            revealable
+            revealLabel="le mot de passe"
+            required
+          />
+          <FormField
+            {...fieldProps("password_confirm")}
+            label="Confirmation"
+            type="password"
+            icon={LockIcon}
+            placeholder="Saisissez-le à nouveau"
+            autoComplete="new-password"
+            revealable
+            revealLabel="la confirmation du mot de passe"
+            required
+          />
+        </div>
+
+        <p className="register-card__note">
+          <InfoIcon />
+          <span>{config.note}</span>
+        </p>
 
         {formError && (
           <p className="register-card__alert" role="alert">
@@ -203,11 +263,15 @@ export default function RegisterForm({ redirectDelayMs = 1500 }) {
         >
           <UserPlusIcon />
           <span>
-            {status === "submitting" ? "Inscription en cours…" : "S'inscrire"}
+            {status === "submitting" ? "Inscription en cours…" : config.submit}
           </span>
           <ArrowRightIcon />
         </button>
       </form>
+
+      <p className="register-card__switch">
+        <Link to={config.switchLink.to}>{config.switchLink.label}</Link>
+      </p>
     </section>
   );
 }

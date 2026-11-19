@@ -120,3 +120,30 @@ export function BookIcon(props) {
     </Icon>
   );
 }
+
+export function BuildingIcon(props) {
+  return (
+    <Icon {...props}>
+      <rect x="4" y="3" width="16" height="18" rx="1" />
+      <path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3" />
+    </Icon>
+  );
+}
+
+export function BriefcaseIcon(props) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18" />
+    </Icon>
+  );
+}
+
+export function InfoIcon(props) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5M12 8h.01" />
+    </Icon>
+  );
+}

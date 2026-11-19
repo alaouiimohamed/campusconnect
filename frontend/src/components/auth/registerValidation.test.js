@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { parseApiErrors, validateRegister } from "./registerValidation";
+import {
+  ORGANIZER_REGISTER_FIELDS,
+  parseApiErrors,
+  validateRegister,
+} from "./registerValidation";
 
 const VALID = {
   last_name: "Benali",
@@ -47,6 +51,17 @@ describe("validateRegister", () => {
     expect(errors.password).toMatch(/au moins 8 caractères/);
   });
 
+  it("n'exige pas d'organisation pour un étudiant", () => {
+    expect(validateRegister(VALID)).not.toHaveProperty("organisation");
+  });
+
+  it("exige l'organisation dans l'espace organisateur", () => {
+    expect(validateRegister({ ...VALID, organisation: "  " })).toEqual({
+      organisation: "Le nom de l'organisation ou de l'université est obligatoire.",
+    });
+    expect(validateRegister({ ...VALID, organisation: "BDE de la FPK" })).toEqual({});
+  });
+
   it("refuse une confirmation différente", () => {
     expect(validateRegister({ ...VALID, password_confirm: "autre-chose" })).toEqual({
       password_confirm: "Les mots de passe ne correspondent pas.",
@@ -71,6 +86,19 @@ describe("parseApiErrors", () => {
         password: "Ce mot de passe est trop courant. Il est entièrement numérique.",
       },
       form: "Requête invalide.",
+    });
+  });
+
+  it("rattache l'erreur d'organisation au champ seulement s'il est affiché", () => {
+    const data = { organisation: ["Ce champ est obligatoire."] };
+
+    expect(parseApiErrors(data, ORGANIZER_REGISTER_FIELDS)).toEqual({
+      fields: { organisation: "Ce champ est obligatoire." },
+      form: "",
+    });
+    expect(parseApiErrors(data)).toEqual({
+      fields: {},
+      form: "Ce champ est obligatoire.",
     });
   });
 

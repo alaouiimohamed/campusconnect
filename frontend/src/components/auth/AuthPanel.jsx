@@ -1,13 +1,35 @@
-import { BookIcon, GraduationCapIcon, LightbulbIcon, MapPinIcon } from "../icons";
+import {
+  BookIcon,
+  BriefcaseIcon,
+  GraduationCapIcon,
+  LightbulbIcon,
+  MapPinIcon,
+} from "../icons";
 import "./AuthPanel.css";
+
+const SPACES = {
+  etudiant: {
+    tagIcon: GraduationCapIcon,
+    tag: "Campus FPK",
+    text: "Découvrez les événements, inscrivez-vous en un clic et posez vos questions à Campus AI.",
+  },
+  organisateur: {
+    tagIcon: BriefcaseIcon,
+    tag: "Espace organisateur",
+    text: "Publiez vos événements et faites-les connaître à toute la communauté du campus.",
+  },
+};
 
 /**
  * Panneau teal de gauche des pages d'authentification (maquette Synapse).
+ * `space` : "etudiant" (par défaut) ou "organisateur".
  *
  * Images : les fichiers ne sont pas encore fournis. Chaque image est remplacée
  * par un emplacement vide (.auth-panel__slot) ; voir src/assets/README.md.
  */
-export default function AuthPanel() {
+export default function AuthPanel({ space = "etudiant" }) {
+  const { tagIcon: TagIcon, tag, text } = SPACES[space];
+
   return (
     <header className="auth-panel">
       <span className="auth-panel__circle auth-panel__circle--top" aria-hidden="true" />
@@ -30,14 +52,11 @@ export default function AuthPanel() {
           Toute la vie du <em className="auth-panel__highlight">campus</em>, au même
           endroit.
         </p>
-        <p className="auth-panel__text">
-          Découvrez les événements, inscrivez-vous en un clic et posez vos questions à
-          Campus AI.
-        </p>
+        <p className="auth-panel__text">{text}</p>
 
         <p className="auth-panel__tag">
-          <GraduationCapIcon />
-          <span>Campus FPK</span>
+          <TagIcon />
+          <span>{tag}</span>
         </p>
 
         <figure className="auth-panel__photo">
