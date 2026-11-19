@@ -7,6 +7,25 @@ Base : `http://localhost:8000/api/` en local. Toutes les requêtes et réponses 
 |---|---|---|---|
 | GET | `/api/health/` | Non | État de l'API et de la base |
 | POST | `/api/auth/register/` | Non | Création de compte (US01) |
+| POST | `/api/auth/login/` | Non | Connexion : jetons JWT + utilisateur (US02) |
+| POST | `/api/auth/refresh/` | Non | Nouveau jeton d'accès (US02) |
+| POST | `/api/auth/logout/` | Non | Déconnexion : jeton de rafraîchissement en liste noire (US02) |
+| GET | `/api/auth/me/` | **Oui** | Utilisateur connecté (US02) |
+
+## Authentification (US02)
+
+L'API utilise des jetons **JWT** (`djangorestframework-simplejwt`) :
+
+- **jeton d'accès** (`access`) : valable **15 minutes** (`JWT_ACCESS_TOKEN_LIFETIME_MINUTES`),
+  à envoyer dans l'en-tête de chaque requête protégée :
+  `Authorization: Bearer <access>` ;
+- **jeton de rafraîchissement** (`refresh`) : valable **1 jour** (`JWT_REFRESH_TOKEN_LIFETIME_DAYS`),
+  sert uniquement à obtenir un nouveau jeton d'accès (`/api/auth/refresh/`) ;
+- **rotation** : chaque rafraîchissement renvoie aussi un nouveau `refresh` ; l'ancien passe en
+  **liste noire** et ne peut plus servir. Le client doit donc toujours garder le dernier `refresh` reçu.
+
+Sur un endpoint protégé, une requête sans jeton, avec un jeton invalide ou expiré, ou pour un
+compte désactivé, reçoit `401 Unauthorized`.
 
 ---
 
@@ -148,3 +167,175 @@ Mot de passe trop faible (messages des validateurs Django) :
 ```
 
 (Le texte exact est fourni par Django REST Framework.)
+
+---
+
+## POST `/api/auth/login/` – Se connecter (US02)
+
+Accessible **sans authentification**. L'email n'est pas sensible aux majuscules.
+
+Règles de sécurité :
+
+- Email inconnu, mauvais mot de passe ou **compte inactif** : même réponse `401`
+  « Identifiants invalides. », pour ne pas révéler quels comptes existent.
+- Limite de **5 tentatives par minute et par adresse IP** (variable `LOGIN_THROTTLE_RATE`),
+  réussies ou non. Au-delà : `429 Too Many Requests`.
+
+### Exemple de requête
+
+```http
+POST /api/auth/login/
+Content-Type: application/json
+
+{
+  "email": "amina.benali@example.com",
+  "password": "Campus-Connect-2026!"
+}
+```
+
+### `200 OK`
+
+```json
+{
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "first_name": "Amina",
+    "last_name": "Benali",
+    "email": "amina.benali@example.com",
+    "role": "ETUDIANT"
+  }
+}
+```
+
+### `401 Unauthorized`
+
+```json
+{ "detail": "Identifiants invalides." }
+```
+
+### `400 Bad Request`
+
+Champ manquant : `{"email": ["Ce champ est obligatoire."], "password": ["Ce champ est obligatoire."]}`
+
+### `429 Too Many Requests`
+
+```json
+{ "detail": "Requête ralentie. Disponible à nouveau dans 59 secondes." }
+```
+
+---
+
+## POST `/api/auth/refresh/` – Nouveau jeton d'accès (US02)
+
+Accessible **sans authentification** : le jeton de rafraîchissement sert de preuve.
+
+### Exemple de requête
+
+```http
+POST /api/auth/refresh/
+Content-Type: application/json
+
+{ "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+```
+
+### `200 OK`
+
+Rotation : un nouveau `refresh` est renvoyé, l'ancien est mis en liste noire.
+
+```json
+{
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### `401 Unauthorized`
+
+Jeton invalide, expiré, déjà utilisé (rotation) ou mis en liste noire (déconnexion) :
+
+```json
+{ "detail": "Token is invalid", "code": "token_not_valid" }
+```
+
+Le texte de `detail` est fourni **en anglais** par `djangorestframework-simplejwt` et varie selon
+le cas (jeton invalide, expiré, en liste noire). Le client doit se fier au statut `401` et au
+code `token_not_valid`, pas au texte.
+
+---
+
+## POST `/api/auth/logout/` – Se déconnecter (US02)
+
+Met le jeton de rafraîchissement en liste noire : il ne peut plus servir à obtenir de jeton
+d'accès. Accessible **sans authentification**, pour pouvoir se déconnecter même quand le jeton
+d'accès a expiré. Le jeton d'accès en cours reste valable jusqu'à son expiration (15 minutes
+au plus) : le client doit le supprimer de son côté.
+
+### Exemple de requête
+
+```http
+POST /api/auth/logout/
+Content-Type: application/json
+
+{ "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+```
+
+### `200 OK`
+
+```json
+{}
+```
+
+### Erreurs
+
+- `400 Bad Request` si `refresh` est absent : `{"refresh": ["Ce champ est obligatoire."]}`
+- `401 Unauthorized` si le jeton est invalide, expiré ou déjà en liste noire
+  (même corps que pour `/api/auth/refresh/`).
+
+---
+
+## GET `/api/auth/me/` – Utilisateur connecté (US02)
+
+**Authentification requise.**
+
+### Exemple de requête
+
+```http
+GET /api/auth/me/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### `200 OK`
+
+```json
+{
+  "id": 1,
+  "first_name": "Amina",
+  "last_name": "Benali",
+  "email": "amina.benali@example.com",
+  "role": "ETUDIANT"
+}
+```
+
+### `401 Unauthorized`
+
+Sans jeton (en-tête de réponse `WWW-Authenticate: Bearer realm="api"`) :
+
+```json
+{ "detail": "Informations d'authentification non fournies." }
+```
+
+Jeton invalide ou expiré, ou jeton de rafraîchissement utilisé à la place du jeton d'accès :
+
+```json
+{
+  "detail": "Le type de jeton fourni n'est pas valide",
+  "code": "token_not_valid",
+  "messages": [
+    { "token_class": "AccessToken", "token_type": "access", "message": "Token is invalid" }
+  ]
+}
+```
+
+(Corps fourni par `djangorestframework-simplejwt` ; se fier au code `token_not_valid`.)

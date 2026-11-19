@@ -2,6 +2,7 @@ from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from core.models import Organisateur
 
@@ -145,3 +146,30 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"email": ["Un compte existe déjà avec cette adresse email."]}
             ) from exc
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Informations publiques de l'utilisateur connecté (US02)."""
+
+    class Meta:
+        model = User
+        fields = ["id", "first_name", "last_name", "email", "role"]
+        read_only_fields = fields
+
+
+class LoginSerializer(TokenObtainPairSerializer):
+    """Connexion par email + mot de passe (US02).
+
+    Renvoie les jetons access/refresh et les informations de l'utilisateur.
+    Email inconnu, mauvais mot de passe ou compte inactif donnent le même
+    message, pour ne pas révéler quels comptes existent.
+    """
+
+    default_error_messages = {"no_active_account": "Identifiants invalides."}
+
+    def validate(self, attrs):
+        # Les emails sont enregistrés en minuscules (US01).
+        attrs[self.username_field] = normaliser_email(attrs[self.username_field])
+        data = super().validate(attrs)
+        data["user"] = UserSerializer(self.user).data
+        return data

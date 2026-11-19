@@ -4,6 +4,7 @@ Toute la configuration sensible est lue depuis l'environnement
 (ou depuis backend/.env en local) via django-environ.
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -32,6 +33,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Tiers
     "rest_framework",
+    "rest_framework_simplejwt",
+    # Liste noire des jetons de rafraîchissement (déconnexion, rotation).
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     # Projet
     "core",
@@ -106,10 +110,33 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    # Authentification par jeton JWT (US02) : en-tête "Authorization: Bearer <access>".
+    # Les endpoints publics (santé, inscription, connexion...) la désactivent
+    # explicitement avec authentication_classes = [].
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
     # Limites par adresse IP pour les endpoints publics sensibles.
     "DEFAULT_THROTTLE_RATES": {
         "register": env("REGISTER_THROTTLE_RATE", default="10/hour"),
+        "login": env("LOGIN_THROTTLE_RATE", default="5/min"),
     },
+}
+
+# JWT (US02) : jeton d'accès court, jeton de rafraîchissement d'un jour.
+# À chaque rafraîchissement, un nouveau jeton de rafraîchissement est émis et
+# l'ancien passe en liste noire (il ne peut plus servir).
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        minutes=env.int("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", default=15)
+    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        days=env.int("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=1)
+    ),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 if DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
