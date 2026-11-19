@@ -7,6 +7,7 @@ import "./FormField.css";
  * - étiquette toujours visible, reliée au champ ;
  * - erreur écrite « Erreur : … », reliée par aria-describedby,
  *   et signalée par une bordure épaisse (pas seulement par la couleur) ;
+ * - `hint` affiche une aide sous le champ, reliée elle aussi par aria-describedby ;
  * - `revealable` ajoute un bouton œil pour afficher/masquer un mot de passe.
  */
 export default function FormField({
@@ -15,14 +16,18 @@ export default function FormField({
   label,
   type = "text",
   icon: IconComponent,
+  hint,
   error,
   revealable = false,
   revealLabel = "le mot de passe",
   ...inputProps
 }) {
   const [revealed, setRevealed] = useState(false);
+  const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
   const inputType = revealable && revealed ? "text" : type;
+  const describedBy =
+    [hint && hintId, error && errorId].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className={error ? "field field--error" : "field"}>
@@ -37,7 +42,7 @@ export default function FormField({
           type={inputType}
           className="field__input"
           aria-invalid={error ? "true" : undefined}
-          aria-describedby={error ? errorId : undefined}
+          aria-describedby={describedBy}
           {...inputProps}
         />
         {revealable && (
@@ -52,6 +57,11 @@ export default function FormField({
           </button>
         )}
       </div>
+      {hint && (
+        <p id={hintId} className="field__hint">
+          {hint}
+        </p>
+      )}
       {error && (
         <p id={errorId} className="field__error">
           Erreur : {error}

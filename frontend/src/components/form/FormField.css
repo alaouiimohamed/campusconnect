@@ -77,6 +77,11 @@
   outline-offset: calc(var(--focus-ring-offset) * -1);
 }
 
+.field__hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
+}
+
 /* Erreur : bordure épaisse + message écrit, jamais la couleur seule */
 .field--error .field__input {
   border: var(--border-width-error) solid var(--color-danger);

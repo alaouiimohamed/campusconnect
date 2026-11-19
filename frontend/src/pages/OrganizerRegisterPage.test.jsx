@@ -68,6 +68,53 @@ describe("OrganizerRegisterPage – affichage", () => {
     expect(document.title).toBe("Espace organisateur · Synapse");
   });
 
+  it("affiche le contenu du panneau organisateur", () => {
+    renderPage();
+
+    const panel = screen.getByText("Espace organisateur").closest(".auth-panel");
+    expect(
+      within(panel).getByText("Organisez, publiez et suivez vos événements."),
+    ).toBeInTheDocument();
+    expect(
+      within(panel).getByText(
+        "Créez vos événements, gérez les inscriptions et suivez vos participants depuis un seul espace.",
+      ),
+    ).toBeInTheDocument();
+    const points = within(panel)
+      .getAllByRole("listitem")
+      .map((item) => item.textContent);
+    expect(points).toEqual([
+      "Créer et modifier vos événements",
+      "Consulter les inscrits et la liste d'attente",
+      "Publication après validation de l'administrateur",
+    ]);
+    expect(
+      screen.getByText("Réservé aux personnes qui gèrent des événements."),
+    ).toBeInTheDocument();
+  });
+
+  it("affiche les images du panneau avec un texte alternatif", () => {
+    renderPage();
+
+    for (const name of [
+      "Synapse",
+      "Bâtiment de la Faculté polydisciplinaire de Khouribga",
+      "Faculté polydisciplinaire de Khouribga",
+      "Université Sultan Moulay Slimane",
+    ]) {
+      expect(screen.getByRole("img", { name })).toHaveAttribute("src");
+    }
+  });
+
+  it("propose un lien « Retour aux événements »", () => {
+    renderPage();
+
+    expect(screen.getByRole("link", { name: "Retour aux événements" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+  });
+
   it("affiche les champs dans l'ordre, organisation comprise, sans « Je suis »", () => {
     renderPage();
 
@@ -76,12 +123,16 @@ describe("OrganizerRegisterPage – affichage", () => {
     expect(names).toEqual([
       "last_name",
       "first_name",
-      "organisation",
       "email",
+      "organisation",
       "password",
       "password_confirm",
     ]);
     expect(screen.getByLabelText(ORGANISATION)).toHaveAttribute("maxlength", "150");
+    expect(screen.getByLabelText(ORGANISATION)).toHaveAttribute(
+      "placeholder",
+      "Ex. Club IA, Bureau des stages…",
+    );
     expect(screen.queryByLabelText(/je suis/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
@@ -96,6 +147,16 @@ describe("OrganizerRegisterPage – affichage", () => {
       const row = screen.getByLabelText(left).closest(".register-card__row");
       expect(within(row).getByLabelText(right)).toBeInTheDocument();
     }
+  });
+
+  it("guide la saisie de l'adresse e-mail", () => {
+    renderPage();
+
+    const email = screen.getByLabelText("Adresse e-mail");
+    expect(email).toHaveAttribute("placeholder", "prenom.nom@exemple.com");
+    expect(email).toHaveAccessibleDescription(
+      "Universitaire, professionnelle ou personnelle.",
+    );
   });
 
   it("affiche la note de validation par l'administrateur, sans quiz", () => {

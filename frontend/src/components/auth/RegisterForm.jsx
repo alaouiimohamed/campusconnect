@@ -42,8 +42,9 @@ const SPACES = {
     role: "ORGANISATEUR",
     fields: ORGANIZER_REGISTER_FIELDS,
     title: "Créer un compte organisateur",
-    subtitle: "Organisez et publiez vos événements auprès des étudiants du campus.",
-    emailPlaceholder: "contact@organisation.ma",
+    subtitle: "Réservé aux personnes qui gèrent des événements.",
+    emailPlaceholder: "prenom.nom@exemple.com",
+    emailHint: "Universitaire, professionnelle ou personnelle.",
     note: "Vos événements sont publiés après validation par l'administrateur.",
     submit: "Créer un compte organisateur",
     switchLink: { to: "/inscription", label: "Accéder à l'espace étudiant" },
@@ -193,28 +194,29 @@ export default function RegisterForm({ space = "etudiant", redirectDelayMs = 150
             required
           />
         </div>
-        {"organisation" in values && (
-          <FormField
-            {...fieldProps("organisation")}
-            label="Nom de l'organisation ou de l'université"
-            icon={BuildingIcon}
-            placeholder="Ex. : BDE de la FPK"
-            autoComplete="organization"
-            maxLength={ORGANISATION_MAX_LENGTH}
-            required
-          />
-        )}
         <FormField
           {...fieldProps("email")}
           label="Adresse e-mail"
           type="email"
           icon={MailIcon}
           placeholder={config.emailPlaceholder}
+          hint={config.emailHint}
           autoComplete="email"
           inputMode="email"
           spellCheck={false}
           required
         />
+        {"organisation" in values && (
+          <FormField
+            {...fieldProps("organisation")}
+            label="Nom de l'organisation ou de l'université"
+            icon={BuildingIcon}
+            placeholder="Ex. Club IA, Bureau des stages…"
+            autoComplete="organization"
+            maxLength={ORGANISATION_MAX_LENGTH}
+            required
+          />
+        )}
         <div className="register-card__row">
           <FormField
             {...fieldProps("password")}

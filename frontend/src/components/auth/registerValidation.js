@@ -18,8 +18,8 @@ export const REGISTER_FIELDS = [
 export const ORGANIZER_REGISTER_FIELDS = [
   "last_name",
   "first_name",
-  "organisation",
   "email",
+  "organisation",
   "password",
   "password_confirm",
 ];
