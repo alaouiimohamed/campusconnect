@@ -29,3 +29,17 @@
   outline: var(--focus-ring-width) solid var(--color-action);
   outline-offset: var(--focus-ring-offset);
 }
+
+/* Écran large : barre sur une seule ligne dès 1280 px (textes en 14 px) ;
+   si elle déborde quand même, la question et son lien passent ensemble à la
+   ligne. */
+@media (min-width: 900px) {
+  .auth-topbar {
+    column-gap: var(--space-4);
+    font-size: var(--font-size-sm);
+  }
+
+  .auth-topbar__switch {
+    white-space: nowrap;
+  }
+}
