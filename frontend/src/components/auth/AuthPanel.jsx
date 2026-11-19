@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import campusPhoto from "../../assets/campus-fpk.jpg";
 import logoFpk from "../../assets/logo-fpk.png";
 import logoSynapseInverse from "../../assets/logo-synapse-inverse.png";
@@ -63,10 +62,6 @@ export default function AuthPanel({ space = "etudiant" }) {
       <BookIcon className="auth-panel__deco auth-panel__deco--book" />
 
       <div className="auth-panel__content">
-        <Link to="/" className="auth-panel__back">
-          <span aria-hidden="true">←</span> Retour aux événements
-        </Link>
-
         <img className="auth-panel__logo" src={logoSynapseInverse} alt="Synapse" />
 
         <p className="auth-panel__tag">

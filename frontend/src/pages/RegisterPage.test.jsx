@@ -38,7 +38,7 @@ async function fillForm(user, overrides = {}) {
     Prénom: "Amina",
     "Adresse e-mail": "amina.benali@usms.ac.ma",
     "Mot de passe": MOT_DE_PASSE,
-    Confirmation: MOT_DE_PASSE,
+    "Confirmation du mot de passe": MOT_DE_PASSE,
     ...overrides,
   };
   for (const [label, value] of Object.entries(values)) {
@@ -77,12 +77,35 @@ describe("RegisterPage – affichage", () => {
     ]);
   });
 
-  it("propose un lien « Retour aux événements »", () => {
+  it("affiche au-dessus de la carte le retour et le lien vers l'autre espace", () => {
     renderPage();
 
-    expect(screen.getByRole("link", { name: "Retour aux événements" })).toHaveAttribute(
-      "href",
-      "/",
+    const nav = screen.getByRole("navigation", { name: "Navigation de l'inscription" });
+    expect(
+      within(nav).getByRole("link", { name: "Retour aux événements" }),
+    ).toHaveAttribute("href", "/");
+    expect(
+      within(nav).getByText("Vous organisez des événements ?"),
+    ).toBeInTheDocument();
+    expect(
+      within(nav).getByRole("link", { name: "Accéder à l'espace organisateur" }),
+    ).toBeInTheDocument();
+
+    // Plus aucun lien dans la carte elle-même.
+    const card = screen.getByRole("heading", { level: 1 }).closest("section");
+    expect(within(card).queryByRole("link")).not.toBeInTheDocument();
+  });
+
+  it("affiche des placeholders explicites pour les mots de passe", () => {
+    renderPage();
+
+    expect(screen.getByLabelText("Mot de passe")).toHaveAttribute(
+      "placeholder",
+      "Entrez votre mot de passe",
+    );
+    expect(screen.getByLabelText("Confirmation du mot de passe")).toHaveAttribute(
+      "placeholder",
+      "Confirmez le mot de passe",
     );
   });
 
@@ -106,7 +129,7 @@ describe("RegisterPage – affichage", () => {
       "Prénom",
       "Adresse e-mail",
       "Mot de passe",
-      "Confirmation",
+      "Confirmation du mot de passe",
     ]) {
       expect(screen.getByLabelText(label)).toBeVisible();
     }
@@ -120,7 +143,7 @@ describe("RegisterPage – affichage", () => {
 
     const pairs = [
       ["Nom", "Prénom"],
-      ["Mot de passe", "Confirmation"],
+      ["Mot de passe", "Confirmation du mot de passe"],
     ];
     for (const [left, right] of pairs) {
       const row = screen.getByLabelText(left).closest(".register-card__row");
@@ -177,7 +200,10 @@ describe("RegisterPage – affichage", () => {
         name: "Afficher la confirmation du mot de passe",
       }),
     );
-    expect(screen.getByLabelText("Confirmation")).toHaveAttribute("type", "text");
+    expect(screen.getByLabelText("Confirmation du mot de passe")).toHaveAttribute(
+      "type",
+      "text",
+    );
   });
 });
 
@@ -202,9 +228,9 @@ describe("RegisterPage – validation", () => {
     expect(screen.getByLabelText("Mot de passe")).toHaveAccessibleDescription(
       "Erreur : Le mot de passe est obligatoire.",
     );
-    expect(screen.getByLabelText("Confirmation")).toHaveAccessibleDescription(
-      "Erreur : Confirmez le mot de passe.",
-    );
+    expect(
+      screen.getByLabelText("Confirmation du mot de passe"),
+    ).toHaveAccessibleDescription("Erreur : Confirmez le mot de passe.");
   });
 
   it("refuse un e-mail invalide et des mots de passe différents", async () => {
@@ -213,7 +239,7 @@ describe("RegisterPage – validation", () => {
 
     await fillForm(user, {
       "Adresse e-mail": "amina@",
-      Confirmation: "Autre-mot-de-passe-1",
+      "Confirmation du mot de passe": "Autre-mot-de-passe-1",
     });
     await submit(user);
 
@@ -221,9 +247,9 @@ describe("RegisterPage – validation", () => {
     expect(screen.getByLabelText("Adresse e-mail")).toHaveAccessibleDescription(
       "Erreur : Saisissez une adresse e-mail valide.",
     );
-    expect(screen.getByLabelText("Confirmation")).toHaveAccessibleDescription(
-      "Erreur : Les mots de passe ne correspondent pas.",
-    );
+    expect(
+      screen.getByLabelText("Confirmation du mot de passe"),
+    ).toHaveAccessibleDescription("Erreur : Les mots de passe ne correspondent pas.");
     expect(screen.getByLabelText("Adresse e-mail")).toHaveFocus();
   });
 

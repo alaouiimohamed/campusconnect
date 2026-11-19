@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import AuthPanel from "../components/auth/AuthPanel";
+import AuthTopBar from "../components/auth/AuthTopBar";
 import RegisterForm from "../components/auth/RegisterForm";
 import "./RegisterPage.css";
 
@@ -17,7 +18,10 @@ export default function RegisterPage({ redirectDelayMs }) {
     <div className="register-page">
       <AuthPanel space="etudiant" />
       <main className="register-page__main">
-        <RegisterForm space="etudiant" redirectDelayMs={redirectDelayMs} />
+        <div className="register-page__column">
+          <AuthTopBar space="etudiant" />
+          <RegisterForm space="etudiant" redirectDelayMs={redirectDelayMs} />
+        </div>
       </main>
     </div>
   );

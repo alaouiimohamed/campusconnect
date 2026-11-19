@@ -44,7 +44,7 @@ async function fillForm(user, overrides = {}) {
     [ORGANISATION]: "BDE de la FPK",
     "Adresse e-mail": "contact@bde-fpk.org",
     "Mot de passe": MOT_DE_PASSE,
-    Confirmation: MOT_DE_PASSE,
+    "Confirmation du mot de passe": MOT_DE_PASSE,
     ...overrides,
   };
   for (const [label, value] of Object.entries(values)) {
@@ -106,13 +106,20 @@ describe("OrganizerRegisterPage – affichage", () => {
     }
   });
 
-  it("propose un lien « Retour aux événements »", () => {
+  it("affiche au-dessus de la carte le retour et le lien vers l'espace étudiant", () => {
     renderPage();
 
-    expect(screen.getByRole("link", { name: "Retour aux événements" })).toHaveAttribute(
-      "href",
-      "/",
-    );
+    const nav = screen.getByRole("navigation", { name: "Navigation de l'inscription" });
+    expect(
+      within(nav).getByRole("link", { name: "Retour aux événements" }),
+    ).toHaveAttribute("href", "/");
+    expect(within(nav).getByText("Vous êtes étudiant ?")).toBeInTheDocument();
+    expect(
+      within(nav).getByRole("link", { name: "Accéder à l'espace étudiant" }),
+    ).toBeInTheDocument();
+
+    const card = screen.getByRole("heading", { level: 1 }).closest("section");
+    expect(within(card).queryByRole("link")).not.toBeInTheDocument();
   });
 
   it("affiche les champs dans l'ordre, organisation comprise, sans « Je suis »", () => {
@@ -142,7 +149,7 @@ describe("OrganizerRegisterPage – affichage", () => {
 
     for (const [left, right] of [
       ["Nom", "Prénom"],
-      ["Mot de passe", "Confirmation"],
+      ["Mot de passe", "Confirmation du mot de passe"],
     ]) {
       const row = screen.getByLabelText(left).closest(".register-card__row");
       expect(within(row).getByLabelText(right)).toBeInTheDocument();

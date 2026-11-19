@@ -1,6 +1,5 @@
 .register-card {
   width: 100%;
-  max-width: var(--content-max-width);
   padding: var(--space-6);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -34,7 +33,7 @@
 }
 
 .register-card__title {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-card-title);
   font-weight: var(--font-weight-bold);
   line-height: 1.2;
 }
@@ -48,19 +47,28 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  container-type: inline-size;
 }
 
 /* Deux champs côte à côte (Nom/Prénom, Mot de passe/Confirmation),
-   empilés sur petit écran. */
+   empilés quand le formulaire est étroit. */
 .register-card__row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
-@media (min-width: 560px) {
+@container (min-width: 22rem) {
   .register-card__row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Les champs mot de passe (icône + bouton œil) n'affichent leur placeholder
+   en entier (≈ 205 px) qu'à partir de 40rem de formulaire : empilés en dessous. */
+@container (max-width: 39.99rem) {
+  .register-card__row--password {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -79,26 +87,6 @@
   width: var(--icon-size);
   height: var(--icon-size);
   color: var(--color-brand-text);
-}
-
-.register-card__switch {
-  margin-top: var(--space-6);
-  text-align: center;
-}
-
-.register-card__switch a {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--touch-target-min);
-  color: var(--color-brand-text);
-  font-weight: var(--font-weight-semibold);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-}
-
-.register-card__switch a:focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-action);
-  outline-offset: var(--focus-ring-offset);
 }
 
 .register-card__alert {

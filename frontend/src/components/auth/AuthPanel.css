@@ -47,36 +47,20 @@
   stroke-width: 1.5;
 }
 
+/* Décors placés depuis la gauche, à côté du logo : placés depuis la droite,
+   ils étaient rognés par le grand arrondi du coin supérieur droit. */
 .auth-panel__deco--bulb {
-  top: var(--space-8);
-  right: 30%;
+  top: var(--space-12);
+  left: 11rem;
   width: var(--space-12);
   height: var(--space-12);
 }
 
 .auth-panel__deco--book {
-  top: var(--space-16);
-  right: 12%;
+  top: 5rem;
+  left: 15rem;
   width: var(--space-16);
   height: var(--space-16);
-}
-
-/* Lien retour : blanc sur teal, 16 px, semi-gras */
-.auth-panel__back {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--touch-target-min);
-  color: var(--color-on-action);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-}
-
-.auth-panel__back:focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-accent);
-  outline-offset: var(--focus-ring-offset);
 }
 
 /* Images */

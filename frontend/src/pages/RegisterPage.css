@@ -9,6 +9,15 @@
   padding: var(--space-6) var(--space-4) var(--space-12);
 }
 
+/* Barre de navigation + carte, alignées sur la largeur de la carte */
+.register-page__column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: var(--auth-card-max-width);
+}
+
 @media (min-width: 900px) {
   .register-page {
     display: grid;

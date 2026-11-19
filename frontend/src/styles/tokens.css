@@ -48,6 +48,8 @@
   --font-size-lg: 1.25rem;
   --font-size-xl: clamp(1.5rem, 1vw + 1.25rem, 2rem);
   --font-size-title: clamp(2rem, 4vw + 1rem, 3.5rem);
+  /* Titre des cartes de formulaire (« Créer un compte organisateur » sur une ligne) */
+  --font-size-card-title: clamp(1.5rem, 0.5vw + 1.125rem, 1.75rem);
   --line-height-base: 1.5;
 
   /* Rayons */
@@ -81,5 +83,7 @@
 
   /* Mise en page */
   --content-max-width: 40rem;
+  /* Carte d'inscription : assez large pour deux champs mot de passe côte à côte */
+  --auth-card-max-width: 46rem;
   --status-dot-size: 0.625rem;
 }

@@ -1,0 +1,31 @@
+.auth-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
+  width: 100%;
+}
+
+/* Reste à droite, même quand la barre passe sur deux lignes */
+.auth-topbar__switch {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.auth-topbar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target-min);
+  color: var(--color-brand-text);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.auth-topbar__link:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-action);
+  outline-offset: var(--focus-ring-offset);
+}

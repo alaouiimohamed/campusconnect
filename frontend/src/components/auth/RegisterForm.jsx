@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { register } from "../../services/auth";
 import FormField from "../form/FormField";
 import {
@@ -33,10 +33,6 @@ const SPACES = {
     emailPlaceholder: "prenom.nom@usms.ac.ma",
     note: "Un court quiz vous sera proposé à votre première connexion.",
     submit: "Créer mon compte",
-    switchLink: {
-      to: "/organisateur/inscription",
-      label: "Accéder à l'espace organisateur",
-    },
   },
   organisateur: {
     role: "ORGANISATEUR",
@@ -47,7 +43,6 @@ const SPACES = {
     emailHint: "Universitaire, professionnelle ou personnelle.",
     note: "Vos événements sont publiés après validation par l'administrateur.",
     submit: "Créer un compte organisateur",
-    switchLink: { to: "/inscription", label: "Accéder à l'espace étudiant" },
   },
 };
 
@@ -217,13 +212,13 @@ export default function RegisterForm({ space = "etudiant", redirectDelayMs = 150
             required
           />
         )}
-        <div className="register-card__row">
+        <div className="register-card__row register-card__row--password">
           <FormField
             {...fieldProps("password")}
             label="Mot de passe"
             type="password"
             icon={LockIcon}
-            placeholder="Choisissez un mot de passe"
+            placeholder="Entrez votre mot de passe"
             autoComplete="new-password"
             revealable
             revealLabel="le mot de passe"
@@ -231,10 +226,10 @@ export default function RegisterForm({ space = "etudiant", redirectDelayMs = 150
           />
           <FormField
             {...fieldProps("password_confirm")}
-            label="Confirmation"
+            label="Confirmation du mot de passe"
             type="password"
             icon={LockIcon}
-            placeholder="Saisissez-le à nouveau"
+            placeholder="Confirmez le mot de passe"
             autoComplete="new-password"
             revealable
             revealLabel="la confirmation du mot de passe"
@@ -270,10 +265,6 @@ export default function RegisterForm({ space = "etudiant", redirectDelayMs = 150
           <ArrowRightIcon />
         </button>
       </form>
-
-      <p className="register-card__switch">
-        <Link to={config.switchLink.to}>{config.switchLink.label}</Link>
-      </p>
     </section>
   );
 }
