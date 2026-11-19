@@ -3,7 +3,13 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from rest_framework import serializers
 
+from core.models import Organisateur
+
 from .models import User, normaliser_email
+
+# Rôles qu'un visiteur peut choisir lui-même à l'inscription.
+# PROFESSEUR et ADMIN ne sont attribués que par un administrateur (US03).
+ROLES_INSCRIPTION = [User.Role.ETUDIANT, User.Role.ORGANISATEUR]
 
 MESSAGES_TEXTE = {
     "required": "Ce champ est obligatoire.",
@@ -30,12 +36,25 @@ def _champ_mot_de_passe():
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """Création de compte visiteur (US01).
+    """Création de compte (US01), depuis l'espace étudiant ou organisateur.
 
-    Le rôle est en lecture seule : un nouveau compte est toujours ETUDIANT,
-    même si le client envoie "role" (seul un admin attribue les rôles, US03).
+    - role : ETUDIANT (par défaut) ou ORGANISATEUR ; toute autre valeur est
+      refusée (PROFESSEUR et ADMIN sont attribués par un admin, US03) ;
+    - organisation : obligatoire pour un ORGANISATEUR, ignorée sinon ; le
+      profil core.Organisateur est créé dans la même transaction que le compte.
     """
 
+    role = serializers.ChoiceField(
+        choices=ROLES_INSCRIPTION,
+        default=User.Role.ETUDIANT,
+        error_messages={
+            **MESSAGES_TEXTE,
+            "invalid_choice": "Rôle invalide : choisissez ETUDIANT ou ORGANISATEUR.",
+        },
+    )
+    organisation = _champ_texte(
+        max_length=150, required=False, allow_blank=True, write_only=True
+    )
     first_name = _champ_texte(max_length=150)
     last_name = _champ_texte(max_length=150)
     email = serializers.EmailField(
@@ -56,10 +75,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "role",
+            "organisation",
             "password",
             "password_confirm",
         ]
-        read_only_fields = ["id", "role"]
+        read_only_fields = ["id"]
 
     def validate_email(self, value):
         email = normaliser_email(value)
@@ -70,6 +90,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         return email
 
     def validate(self, attrs):
+        if attrs["role"] == User.Role.ORGANISATEUR:
+            if "organisation" not in attrs:
+                raise serializers.ValidationError(
+                    {"organisation": MESSAGES_TEXTE["required"]}
+                )
+            if not attrs["organisation"]:
+                raise serializers.ValidationError(
+                    {"organisation": MESSAGES_TEXTE["blank"]}
+                )
+        else:
+            # Un étudiant n'a pas d'organisation : la valeur est ignorée.
+            attrs.pop("organisation", None)
+
         password = attrs["password"]
         if password != attrs["password_confirm"]:
             raise serializers.ValidationError(
@@ -91,14 +124,22 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop("password_confirm")
+        role = validated_data["role"]
         try:
+            # Compte et profil organisateur : tout ou rien.
             with transaction.atomic():
-                return User.objects.create_user(
+                user = User.objects.create_user(
                     email=validated_data["email"],
                     password=validated_data["password"],
                     first_name=validated_data["first_name"],
                     last_name=validated_data["last_name"],
+                    role=role,
                 )
+                if role == User.Role.ORGANISATEUR:
+                    Organisateur.objects.create(
+                        user=user, organisation=validated_data["organisation"]
+                    )
+                return user
         except IntegrityError as exc:
             # Deux inscriptions simultanées avec le même email.
             raise serializers.ValidationError(

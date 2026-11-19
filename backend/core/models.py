@@ -82,6 +82,8 @@ class Organisateur(models.Model):
         primary_key=True,
         related_name="profil_organisateur",
     )
+    # Saisi à l'inscription organisateur ; vide pour les profils créés avant.
+    organisation = models.CharField(max_length=150, blank=True)
     telephone = models.CharField(max_length=50, blank=True)
 
     def __str__(self):

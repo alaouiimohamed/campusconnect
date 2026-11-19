@@ -7,6 +7,8 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework.throttling import ScopedRateThrottle
 
+from core.models import Organisateur
+
 User = get_user_model()
 URL = "/api/auth/register/"
 MOT_DE_PASSE = "Campus-Connect-2026!"
@@ -82,17 +84,147 @@ def test_reponse_ne_contient_jamais_le_mot_de_passe(api_client, payload):
 
 
 @pytest.mark.django_db
-def test_role_envoye_est_ignore(api_client, payload):
-    payload["role"] = "ADMIN"
+def test_sans_role_cree_un_etudiant_sans_profil_organisateur(api_client, payload):
+    response = post(api_client, payload)
+
+    assert response.status_code == 201
+    user = User.objects.get(email=payload["email"])
+    assert user.role == User.Role.ETUDIANT
+    assert not Organisateur.objects.exists()
+
+
+@pytest.mark.django_db
+def test_role_etudiant_explicite(api_client, payload):
+    payload["role"] = "ETUDIANT"
 
     response = post(api_client, payload)
 
     assert response.status_code == 201
     assert response.json()["role"] == "ETUDIANT"
-    user = User.objects.get(email=payload["email"])
-    assert user.role == User.Role.ETUDIANT
+
+
+@pytest.mark.django_db
+def test_etudiant_organisation_ignoree(api_client, payload):
+    payload["role"] = "ETUDIANT"
+    payload["organisation"] = "Club Robotique"
+
+    response = post(api_client, payload)
+
+    assert response.status_code == 201
+    assert "organisation" not in response.json()
+    assert not Organisateur.objects.exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "role", ["ADMIN", "PROFESSEUR", "etudiant", "INCONNU", "", None, 1]
+)
+def test_role_invalide_refuse(api_client, payload, role):
+    payload["role"] = role
+
+    response = post(api_client, payload)
+
+    assert response.status_code == 400
+    assert list(response.json()) == ["role"]
+    assert not User.objects.exists()
+
+
+@pytest.mark.django_db
+def test_role_admin_refuse_avec_message(api_client, payload):
+    payload["role"] = "ADMIN"
+
+    response = post(api_client, payload)
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "role": ["Rôle invalide : choisissez ETUDIANT ou ORGANISATEUR."]
+    }
+
+
+@pytest.mark.django_db
+def test_creation_organisateur(api_client, payload):
+    payload["role"] = "ORGANISATEUR"
+    payload["organisation"] = "  BDE de la FPK "
+    payload["email"] = "contact@bde-fpk.org"  # e-mail libre, non universitaire
+
+    response = post(api_client, payload)
+
+    assert response.status_code == 201
+    body = response.json()
+    assert set(body) == {"id", "first_name", "last_name", "email", "role"}
+    assert body["role"] == "ORGANISATEUR"
+
+    user = User.objects.get(email="contact@bde-fpk.org")
+    assert user.role == User.Role.ORGANISATEUR
     assert not user.is_staff
     assert not user.is_superuser
+    assert user.profil_organisateur.organisation == "BDE de la FPK"
+
+
+@pytest.mark.django_db
+def test_organisateur_sans_organisation(api_client, payload):
+    payload["role"] = "ORGANISATEUR"
+
+    response = post(api_client, payload)
+
+    assert response.status_code == 400
+    assert response.json() == {"organisation": ["Ce champ est obligatoire."]}
+    assert not User.objects.exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("valeur", ["", "   "])
+def test_organisateur_organisation_vide(api_client, payload, valeur):
+    payload["role"] = "ORGANISATEUR"
+    payload["organisation"] = valeur
+
+    response = post(api_client, payload)
+
+    assert response.status_code == 400
+    assert response.json() == {"organisation": ["Ce champ ne peut pas être vide."]}
+    assert not User.objects.exists()
+
+
+@pytest.mark.django_db
+def test_organisateur_organisation_trop_longue(api_client, payload):
+    payload["role"] = "ORGANISATEUR"
+    payload["organisation"] = "x" * 151
+
+    response = post(api_client, payload)
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "organisation": ["Ce champ ne doit pas dépasser 150 caractères."]
+    }
+    assert not User.objects.exists()
+
+
+@pytest.mark.django_db
+def test_organisateur_organisation_150_caracteres(api_client, payload):
+    payload["role"] = "ORGANISATEUR"
+    payload["organisation"] = "x" * 150
+
+    response = post(api_client, payload)
+
+    assert response.status_code == 201
+    assert Organisateur.objects.get().organisation == "x" * 150
+
+
+@pytest.mark.django_db
+def test_organisateur_transaction_annulee_si_profil_echoue(api_client, payload):
+    payload["role"] = "ORGANISATEUR"
+    payload["organisation"] = "BDE de la FPK"
+
+    with (
+        mock.patch.object(
+            Organisateur.objects, "create", side_effect=RuntimeError("panne")
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        post(api_client, payload)
+
+    # Le compte créé juste avant le profil a été annulé avec lui.
+    assert not User.objects.exists()
 
 
 @pytest.mark.django_db
