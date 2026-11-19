@@ -139,6 +139,14 @@ export function BriefcaseIcon(props) {
   );
 }
 
+export function CheckIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="m5 12 5 5L20 7" />
+    </Icon>
+  );
+}
+
 export function InfoIcon(props) {
   return (
     <Icon {...props}>

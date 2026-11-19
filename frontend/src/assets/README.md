@@ -1,16 +1,22 @@
 # Images de l'interface
 
-Images attendues pour la page d'inscription (US01), d'après la maquette.
-Elles ne sont pas encore fournies : `AuthPanel.jsx` affiche un emplacement vide
-(`.auth-panel__slot`) à la place de chacune.
+> **Versions provisoires.** Ces images ont été extraites de la maquette de Salma
+> (capture d'écran) : leur résolution et leur détourage sont approximatifs.
+> Elles sont à remplacer par les fichiers originaux de Salma, **sous le même
+> nom**, sans autre modification du code.
 
-| Fichier attendu    | Contenu                              | Emplacement dans `AuthPanel.jsx` |
-| ------------------ | ------------------------------------ | -------------------------------- |
-| `logo-synapse.png` | Logo Synapse (utilisé sans retouche) | `.auth-panel__slot--logo`        |
-| `campus-fpk.jpg`   | Photo du campus FPK                  | `.auth-panel__slot--photo`       |
-| `logo-fpk.png`     | Logo de la FPK                       | `.auth-panel__slot--partner` (1) |
-| `logo-usms.png`    | Logo de l'USMS                       | `.auth-panel__slot--partner` (2) |
+| Fichier                    | Contenu                                     | Utilisation                                         |
+| -------------------------- | ------------------------------------------- | --------------------------------------------------- |
+| `logo-synapse.png`         | Logo Synapse, pour fonds clairs             | Réservé aux fonds clairs (pas encore utilisé)       |
+| `logo-synapse-inverse.png` | Logo Synapse, version claire pour fond teal | `AuthPanel.jsx` (hauteur minimale 56 px)            |
+| `campus-fpk.jpg`           | Photo du campus FPK                         | `AuthPanel.jsx`, photo « Campus FPK »               |
+| `logo-fpk.png`             | Logo de la FPK                              | `AuthPanel.jsx`, logos partenaires (sur fond blanc) |
+| `logo-usms.png`            | Logo de l'USMS                              | `AuthPanel.jsx`, logos partenaires (sur fond blanc) |
 
-Quand une image arrive : l'importer dans `AuthPanel.jsx`
-(`import logo from "../../assets/logo-synapse.png"`) et remplacer
-l'emplacement par une balise `<img>` avec un texte alternatif.
+Règles :
+
+- chaque `<img>` porte un texte alternatif (`alt`) qui décrit l'image ;
+- sur le panneau teal, utiliser uniquement `logo-synapse-inverse.png` ;
+- importer les images depuis le composant
+  (`import logo from "../../assets/logo-synapse-inverse.png"`) pour que Vite
+  les versionne au build.

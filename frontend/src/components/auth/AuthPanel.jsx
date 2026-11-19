@@ -1,34 +1,56 @@
+import { Link } from "react-router";
+import campusPhoto from "../../assets/campus-fpk.jpg";
+import logoFpk from "../../assets/logo-fpk.png";
+import logoSynapseInverse from "../../assets/logo-synapse-inverse.png";
+import logoUsms from "../../assets/logo-usms.png";
 import {
   BookIcon,
   BriefcaseIcon,
+  CheckIcon,
   GraduationCapIcon,
   LightbulbIcon,
   MapPinIcon,
 } from "../icons";
 import "./AuthPanel.css";
 
+const CAMPUS_TAGLINE = (
+  <>
+    Toute la vie du <em className="auth-panel__highlight">campus</em>, au même endroit.
+  </>
+);
+
 const SPACES = {
   etudiant: {
     tagIcon: GraduationCapIcon,
-    tag: "Campus FPK",
+    tag: "Espace étudiant",
+    title: CAMPUS_TAGLINE,
     text: "Découvrez les événements, inscrivez-vous en un clic et posez vos questions à Campus AI.",
+    points: [
+      "Rechercher et filtrer les événements",
+      "S'inscrire et se désinscrire en un clic",
+      "Recevoir des recommandations personnalisées",
+    ],
   },
   organisateur: {
     tagIcon: BriefcaseIcon,
     tag: "Espace organisateur",
-    text: "Publiez vos événements et faites-les connaître à toute la communauté du campus.",
+    title: "Organisez, publiez et suivez vos événements.",
+    text: "Créez vos événements, gérez les inscriptions et suivez vos participants depuis un seul espace.",
+    points: [
+      "Créer et modifier vos événements",
+      "Consulter les inscrits et la liste d'attente",
+      "Publication après validation de l'administrateur",
+    ],
   },
 };
 
 /**
  * Panneau teal de gauche des pages d'authentification (maquette Synapse).
  * `space` : "etudiant" (par défaut) ou "organisateur".
- *
- * Images : les fichiers ne sont pas encore fournis. Chaque image est remplacée
- * par un emplacement vide (.auth-panel__slot) ; voir src/assets/README.md.
+ * Images : versions provisoires, voir src/assets/README.md.
  */
 export default function AuthPanel({ space = "etudiant" }) {
-  const { tagIcon: TagIcon, tag, text } = SPACES[space];
+  const { tagIcon: TagIcon, tag, title, text, points } = SPACES[space];
 
   return (
     <header className="auth-panel">
@@ -41,29 +63,34 @@ export default function AuthPanel({ space = "etudiant" }) {
       <BookIcon className="auth-panel__deco auth-panel__deco--book" />
 
       <div className="auth-panel__content">
-        {/* Emplacement : logo Synapse (src/assets/logo-synapse.png) */}
-        <div
-          className="auth-panel__slot auth-panel__slot--logo"
-          role="img"
-          aria-label="Synapse"
-        />
+        <Link to="/" className="auth-panel__back">
+          <span aria-hidden="true">←</span> Retour aux événements
+        </Link>
 
-        <p className="auth-panel__tagline">
-          Toute la vie du <em className="auth-panel__highlight">campus</em>, au même
-          endroit.
-        </p>
-        <p className="auth-panel__text">{text}</p>
+        <img className="auth-panel__logo" src={logoSynapseInverse} alt="Synapse" />
 
         <p className="auth-panel__tag">
           <TagIcon />
           <span>{tag}</span>
         </p>
 
+        <p className="auth-panel__tagline">{title}</p>
+        <p className="auth-panel__text">{text}</p>
+
+        <ul className="auth-panel__points">
+          {points.map((point) => (
+            <li key={point} className="auth-panel__point">
+              <CheckIcon />
+              <span>{point}</span>
+            </li>
+          ))}
+        </ul>
+
         <figure className="auth-panel__photo">
-          {/* Emplacement : photo du campus (src/assets/campus-fpk.jpg) */}
-          <div
-            className="auth-panel__slot auth-panel__slot--photo"
-            aria-hidden="true"
+          <img
+            className="auth-panel__photo-img"
+            src={campusPhoto}
+            alt="Bâtiment de la Faculté polydisciplinaire de Khouribga"
           />
           <figcaption className="auth-panel__caption">
             <MapPinIcon />
@@ -71,10 +98,17 @@ export default function AuthPanel({ space = "etudiant" }) {
           </figcaption>
         </figure>
 
-        <div className="auth-panel__partners" aria-hidden="true">
-          {/* Emplacements : logos partenaires (src/assets/logo-fpk.png, logo-usms.png) */}
-          <div className="auth-panel__slot auth-panel__slot--partner" />
-          <div className="auth-panel__slot auth-panel__slot--partner" />
+        <div className="auth-panel__partners">
+          <img
+            className="auth-panel__partner"
+            src={logoFpk}
+            alt="Faculté polydisciplinaire de Khouribga"
+          />
+          <img
+            className="auth-panel__partner"
+            src={logoUsms}
+            alt="Université Sultan Moulay Slimane"
+          />
         </div>
       </div>
     </header>

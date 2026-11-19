@@ -62,6 +62,30 @@ describe("RegisterPage – affichage", () => {
     expect(document.title).toBe("Créer un compte · Synapse");
   });
 
+  it("affiche le panneau « Espace étudiant » et ses points", () => {
+    renderPage();
+
+    const panel = screen.getByText("Espace étudiant").closest(".auth-panel");
+    expect(panel).not.toBeNull();
+    const points = within(panel)
+      .getAllByRole("listitem")
+      .map((item) => item.textContent);
+    expect(points).toEqual([
+      "Rechercher et filtrer les événements",
+      "S'inscrire et se désinscrire en un clic",
+      "Recevoir des recommandations personnalisées",
+    ]);
+  });
+
+  it("propose un lien « Retour aux événements »", () => {
+    renderPage();
+
+    expect(screen.getByRole("link", { name: "Retour aux événements" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+  });
+
   it("affiche les champs dans l'ordre, sans « Je suis » ni organisation", () => {
     renderPage();
 

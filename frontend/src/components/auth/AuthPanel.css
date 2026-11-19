@@ -61,28 +61,46 @@
   height: var(--space-16);
 }
 
-/* Emplacements d'images vides (images non fournies) */
-.auth-panel__slot {
-  border: 2px dashed color-mix(in srgb, var(--color-surface) 60%, transparent);
-  background-color: color-mix(in srgb, var(--color-surface) 12%, transparent);
+/* Lien retour : blanc sur teal, 16 px, semi-gras */
+.auth-panel__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target-min);
+  color: var(--color-on-action);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
-.auth-panel__slot--logo {
-  width: 8rem;
-  height: 8rem;
-  border-radius: var(--radius-pill);
+.auth-panel__back:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-accent);
+  outline-offset: var(--focus-ring-offset);
 }
 
-.auth-panel__slot--photo {
+/* Images */
+.auth-panel__logo {
+  height: 5rem;
+  min-height: 56px;
+  width: auto;
+}
+
+.auth-panel__photo-img {
+  display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
+  object-fit: cover;
   border-radius: var(--radius-card);
 }
 
-.auth-panel__slot--partner {
-  width: 6rem;
+/* Logos partenaires sur pastille blanche (leurs fonds sont blancs) */
+.auth-panel__partner {
   height: 4.5rem;
+  width: auto;
+  padding: var(--space-2);
   border-radius: var(--radius-button);
+  background-color: var(--color-surface);
 }
 
 /* Textes */
@@ -117,7 +135,32 @@
   font-weight: var(--font-weight-semibold);
 }
 
+/* Points cochés : coche sable, texte blanc 16 px */
+.auth-panel__points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auth-panel__point {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.auth-panel__point .icon {
+  flex-shrink: 0;
+  color: var(--color-accent);
+  stroke-width: 3;
+}
+
 .auth-panel__tag .icon,
+.auth-panel__point .icon,
 .auth-panel__caption .icon {
   width: var(--icon-size);
   height: var(--icon-size);
@@ -156,14 +199,13 @@
   .auth-panel__circle {
     display: none;
   }
-
-  .auth-panel__slot--logo {
-    width: 5rem;
-    height: 5rem;
-  }
 }
 
 @media (min-width: 900px) {
+  .auth-panel__logo {
+    height: 7rem;
+  }
+
   .auth-panel {
     min-height: 100vh;
     padding: var(--space-12) var(--space-12) var(--space-16);
