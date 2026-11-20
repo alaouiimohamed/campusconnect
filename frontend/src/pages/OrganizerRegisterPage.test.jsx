@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, expect, it, vi } from "vitest";
+import AuthProvider from "../auth/AuthProvider";
 import LoginPage from "./LoginPage";
 import OrganizerRegisterPage from "./OrganizerRegisterPage";
 import RegisterPage from "./RegisterPage";
@@ -15,11 +16,13 @@ function renderPage() {
   const user = userEvent.setup();
   render(
     <MemoryRouter initialEntries={["/organisateur/inscription"]}>
-      <Routes>
-        <Route path="/organisateur/inscription" element={<OrganizerRegisterPage />} />
-        <Route path="/inscription" element={<RegisterPage />} />
-        <Route path="/connexion" element={<LoginPage />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/organisateur/inscription" element={<OrganizerRegisterPage />} />
+          <Route path="/inscription" element={<RegisterPage />} />
+          <Route path="/connexion" element={<LoginPage />} />
+        </Routes>
+      </AuthProvider>
     </MemoryRouter>,
   );
   return user;
