@@ -11,6 +11,7 @@ Base : `http://localhost:8000/api/` en local. Toutes les requêtes et réponses 
 | POST | `/api/auth/refresh/` | Non | Nouveau jeton d'accès (US02) |
 | POST | `/api/auth/logout/` | Non | Déconnexion : jeton de rafraîchissement en liste noire (US02) |
 | GET | `/api/auth/me/` | **Oui** | Utilisateur connecté (US02) |
+| POST | `/api/evenements/` | **Oui** (ORGANISATEUR, PROFESSEUR) | Création d'un événement (US07) |
 
 ## Authentification (US02)
 
@@ -339,3 +340,124 @@ Jeton invalide ou expiré, ou jeton de rafraîchissement utilisé à la place du
 ```
 
 (Corps fourni par `djangorestframework-simplejwt` ; se fier au code `token_not_valid`.)
+
+---
+
+## POST `/api/evenements/` – Créer un événement (US07)
+
+**Authentification requise**, avec le rôle `ORGANISATEUR` ou `PROFESSEUR` (le professeur utilise
+l'espace organisateur).
+
+Règles :
+
+- l'**organisateur** est toujours l'utilisateur connecté : un champ `organisateur` envoyé dans le
+  corps est **ignoré** ;
+- un professeur (ou un compte sans profil organisateur) reçoit automatiquement son profil
+  `core.Organisateur` à sa première création, dans la même transaction que l'événement ;
+- `statut` : `BROUILLON` (« Enregistrer le brouillon », par défaut) ou `EN_ATTENTE`
+  (« Soumettre pour validation »). Toute autre valeur (`PUBLIE`, `COMPLET`…) est refusée :
+  **seul l'administrateur publie** un événement ;
+- la photo de couverture n'est pas encore gérée (tâche séparée).
+
+### Corps de la requête
+
+| Champ | Type | Obligatoire | Règles |
+|---|---|---|---|
+| `titre` | string | oui | Non vide, 150 caractères max. |
+| `categories` | liste d'entiers | oui | Au moins un identifiant de `Categorie` existant. |
+| `description` | string | oui | Non vide. |
+| `date_debut` | date-heure ISO 8601 | oui | Dans le futur. Sans fuseau, l'heure est lue dans `Africa/Casablanca`. |
+| `date_fin` | date-heure ISO 8601 | oui | Strictement après `date_debut`. |
+| `lieu` | string | oui | Non vide, 150 caractères max. |
+| `capacite` | entier | oui | Supérieur à 0. |
+| `statut` | string | non | `BROUILLON` (défaut) ou `EN_ATTENTE`. |
+
+Les espaces autour des textes sont retirés.
+
+### Exemple de requête
+
+```http
+POST /api/evenements/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "titre": "Journée de l'intelligence artificielle",
+  "categories": [1, 3],
+  "description": "Conférences et ateliers autour de l'IA.",
+  "date_debut": "2026-12-15T09:00:00+01:00",
+  "date_fin": "2026-12-15T17:00:00+01:00",
+  "lieu": "Amphi A, FPK",
+  "capacite": 120,
+  "statut": "EN_ATTENTE"
+}
+```
+
+### `201 Created`
+
+```json
+{
+  "id": 7,
+  "titre": "Journée de l'intelligence artificielle",
+  "description": "Conférences et ateliers autour de l'IA.",
+  "date_debut": "2026-12-15T09:00:00+01:00",
+  "date_fin": "2026-12-15T17:00:00+01:00",
+  "lieu": "Amphi A, FPK",
+  "capacite": 120,
+  "categories": [
+    { "id": 1, "nom": "Conférence" },
+    { "id": 3, "nom": "Informatique" }
+  ],
+  "statut": "EN_ATTENTE",
+  "organisateur": {
+    "id": 2,
+    "first_name": "Youssef",
+    "last_name": "Alami",
+    "organisation": "BDE de la FPK"
+  }
+}
+```
+
+`organisateur.id` est l'identifiant de l'utilisateur ; `organisation` est vide pour un professeur.
+
+### `400 Bad Request`
+
+Erreurs regroupées par champ :
+
+```json
+{
+  "titre": ["Ce champ est obligatoire."],
+  "categories": ["Choisissez au moins une catégorie."],
+  "description": ["Ce champ est obligatoire."],
+  "date_debut": ["Ce champ est obligatoire."],
+  "date_fin": ["Ce champ est obligatoire."],
+  "lieu": ["Ce champ est obligatoire."],
+  "capacite": ["Ce champ est obligatoire."]
+}
+```
+
+Autres messages :
+
+| Cas | Réponse |
+|---|---|
+| Texte vide | `{"lieu": ["Ce champ ne peut pas être vide."]}` |
+| Texte trop long | `{"titre": ["Ce champ ne doit pas dépasser 150 caractères."]}` |
+| Liste de catégories vide | `{"categories": ["Choisissez au moins une catégorie."]}` |
+| Catégorie inconnue | `{"categories": ["Catégorie introuvable : 999."]}` |
+| Date de début passée | `{"date_debut": ["La date de début doit être dans le futur."]}` |
+| Fin avant (ou égale à) la date de début | `{"date_fin": ["La date de fin doit être après la date de début."]}` |
+| Date mal formée | `{"date_debut": ["Date invalide : utilisez le format ISO 8601, par exemple 2026-12-15T14:00:00+01:00."]}` |
+| Capacité nulle ou négative | `{"capacite": ["La capacité doit être supérieure à 0."]}` |
+| Statut non autorisé | `{"statut": ["Statut invalide : choisissez BROUILLON ou EN_ATTENTE. Seul l'administrateur publie un événement."]}` |
+
+### `401 Unauthorized`
+
+Sans jeton, ou jeton invalide ou expiré : mêmes réponses que pour `/api/auth/me/`.
+
+### `403 Forbidden`
+
+Rôle `ETUDIANT` ou `ADMIN` :
+
+```json
+{ "detail": "Seuls les organisateurs et les professeurs peuvent créer un événement." }
+```
