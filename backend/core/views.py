@@ -6,9 +6,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Organisateur
-from .permissions import EstOrganisateurOuProfesseur
-from .serializers import EvenementCreateSerializer
+from .models import Categorie, Organisateur
+from .permissions import EstAdministrateur, EstOrganisateurOuProfesseur
+from .serializers import CategorieSerializer, EvenementCreateSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -49,3 +49,27 @@ class EvenementCreateView(generics.CreateAPIView):
         with transaction.atomic():
             organisateur, _ = Organisateur.objects.get_or_create(user=self.request.user)
             serializer.save(organisateur=organisateur)
+
+
+class CategorieListCreateView(generics.ListCreateAPIView):
+    """GET public et création réservée aux administrateurs."""
+
+    queryset = Categorie.objects.all()
+    serializer_class = CategorieSerializer
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAuthenticated(), EstAdministrateur()]
+        return [AllowAny()]
+
+
+class CategorieDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Lecture publique et modification/suppression réservées aux administrateurs."""
+
+    queryset = Categorie.objects.all()
+    serializer_class = CategorieSerializer
+
+    def get_permissions(self):
+        if self.request.method in ("PUT", "PATCH", "DELETE"):
+            return [IsAuthenticated(), EstAdministrateur()]
+        return [AllowAny()]
