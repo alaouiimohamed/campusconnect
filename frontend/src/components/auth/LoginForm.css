@@ -1,0 +1,22 @@
+/* Lien « Créer un compte » : teal sur la carte blanche (4,5:1, section 3),
+   souligné pour ne pas reposer sur la couleur seule. */
+.login-card__footer {
+  margin-top: var(--space-6);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.login-card__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  color: var(--color-brand-text);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.login-card__link:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-action);
+  outline-offset: var(--focus-ring-offset);
+}
