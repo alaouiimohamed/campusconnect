@@ -1,8 +1,7 @@
 """Tests de l'API de connexion et déconnexion par JWT (US02)."""
 
-from datetime import timedelta
-
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.urls import reverse
@@ -89,8 +88,21 @@ def test_duree_de_vie_des_jetons(api_client, utilisateur):
 
     access = AccessToken(body["access"])
     refresh = RefreshToken(body["refresh"])
-    assert access["exp"] - access["iat"] == timedelta(minutes=15).total_seconds()
-    assert refresh["exp"] - refresh["iat"] == timedelta(days=1).total_seconds()
+    durees = settings.SIMPLE_JWT
+
+    # simplejwt calcule l'expiration du jeton d'accès à partir de l'heure de
+    # création du refresh (la paire expire relativement au même instant),
+    # alors que son iat est pris un peu plus tard, à sa propre création :
+    # access["exp"] - access["iat"] peut valoir une seconde de moins.
+    assert (
+        access["exp"] - refresh["iat"]
+        == durees["ACCESS_TOKEN_LIFETIME"].total_seconds()
+    )
+    assert refresh["iat"] <= access["iat"] < access["exp"]
+    assert (
+        refresh["exp"] - refresh["iat"]
+        == durees["REFRESH_TOKEN_LIFETIME"].total_seconds()
+    )
 
 
 def test_mauvais_mot_de_passe(api_client, utilisateur):
