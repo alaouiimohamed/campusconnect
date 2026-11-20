@@ -55,6 +55,18 @@ class Categorie(models.Model):
     def __str__(self):
         return self.nom
 
+    def save(self, *args, **kwargs):
+        self.nom = (self.nom or "").strip()
+        self.description = (self.description or "").strip()
+        self.abrv = (self.abrv or "").strip()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        self.nom = (self.nom or "").strip()
+        self.description = (self.description or "").strip()
+        self.abrv = (self.abrv or "").strip()
+
 
 # ==========================================
 # 2. Profils, liés en 1-1 à accounts.User

@@ -12,6 +12,11 @@ Base : `http://localhost:8000/api/` en local. Toutes les requêtes et réponses 
 | POST | `/api/auth/logout/` | Non | Déconnexion : jeton de rafraîchissement en liste noire (US02) |
 | GET | `/api/auth/me/` | **Oui** | Utilisateur connecté (US02) |
 | POST | `/api/evenements/` | **Oui** (ORGANISATEUR, PROFESSEUR) | Création d'un événement (US07) |
+| GET | `/api/categories/` | Non | Liste des catégories |
+| POST | `/api/categories/` | **Oui** (ADMIN) | Créer une catégorie (US15) |
+| GET | `/api/categories/<id>/` | Non | Consulter une catégorie |
+| PATCH/PUT | `/api/categories/<id>/` | **Oui** (ADMIN) | Modifier une catégorie (US15) |
+| DELETE | `/api/categories/<id>/` | **Oui** (ADMIN) | Supprimer une catégorie (US15) |
 
 ## Authentification (US02)
 
@@ -340,6 +345,118 @@ Jeton invalide ou expiré, ou jeton de rafraîchissement utilisé à la place du
 ```
 
 (Corps fourni par `djangorestframework-simplejwt` ; se fier au code `token_not_valid`.)
+
+---
+
+## Catégories (US15)
+
+Les catégories sont utilisées pour classifier les événements. La migration initiale crée
+automatiquement cinq catégories par défaut :
+
+- Conférence
+- Atelier
+- Compétition
+- Culture
+- Associatif
+
+La liste complète est accessible publiquement. La création, la modification et la suppression
+sont réservées aux utilisateurs ayant le rôle `ADMIN`.
+
+### Modèle d'une catégorie
+
+| Champ | Type | Obligatoire | Règles |
+|---|---|---|---|
+| `nom` | string | oui | Entre 1 et 100 caractères, unique sans tenir compte de la casse. |
+| `description` | string | non | 255 caractères maximum ; chaîne vide autorisée. |
+| `abrv` | string | non | 50 caractères maximum ; chaîne vide autorisée. |
+
+Les espaces autour de `nom`, `description` et `abrv` sont supprimés.
+
+### `GET /api/categories/`
+
+Accessible sans authentification. Retourne les catégories triées par nom.
+
+```json
+[
+  {
+    "id": 1,
+    "nom": "Conférence",
+    "description": "",
+    "abrv": "CONF"
+  }
+]
+```
+
+### `POST /api/categories/`
+
+Réservé aux administrateurs.
+
+```http
+POST /api/categories/
+Authorization: Bearer <access>
+Content-Type: application/json
+
+{
+  "nom": "Informatique",
+  "description": "Événements liés aux technologies",
+  "abrv": "IT"
+}
+```
+
+`201 Created` :
+
+```json
+{
+  "id": 6,
+  "nom": "Informatique",
+  "description": "Événements liés aux technologies",
+  "abrv": "IT"
+}
+```
+
+### `GET /api/categories/<id>/`
+
+Accessible sans authentification.
+
+```json
+{
+  "id": 6,
+  "nom": "Informatique",
+  "description": "Événements liés aux technologies",
+  "abrv": "IT"
+}
+```
+
+### `PATCH /api/categories/<id>/`
+
+Réservé aux administrateurs. Permet une modification partielle.
+
+```json
+{
+  "description": "Conférences, ateliers et compétitions autour de l'informatique"
+}
+```
+
+### `PUT /api/categories/<id>/`
+
+Réservé aux administrateurs. Tous les champs modifiables doivent être fournis.
+
+### `DELETE /api/categories/<id>/`
+
+Réservé aux administrateurs. Retourne `204 No Content`.
+
+### Erreurs
+
+- `400 Bad Request` pour un nom vide :
+  `{"nom": ["Ce champ ne peut pas être vide."]}`
+- `400 Bad Request` pour un nom déjà utilisé, avec ou sans majuscules :
+  `{"nom": ["Une catégorie existe déjà avec ce nom."]}`
+- `400 Bad Request` pour un champ trop long :
+  `{"nom": ["Ce champ ne doit pas dépasser 100 caractères."]}`
+- `401 Unauthorized` pour une modification ou suppression sans jeton valide.
+- `403 Forbidden` pour un utilisateur authentifié qui n'est pas administrateur :
+  `{"detail": "Seuls les administrateurs peuvent gérer les catégories."}`
+- `404 Not Found` lorsque l'identifiant de catégorie n'existe pas.
 
 ---
 
