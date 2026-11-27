@@ -18,12 +18,16 @@ const SWITCH = {
  * Barre au-dessus de la carte d'inscription : retour aux événements à gauche,
  * lien vers l'autre espace à droite.
  * `space` : "etudiant" (par défaut) ou "organisateur".
+ * `navLabel` : nom accessible de la barre (la page Connexion a le sien).
  */
-export default function AuthTopBar({ space = "etudiant" }) {
+export default function AuthTopBar({
+  space = "etudiant",
+  navLabel = "Navigation de l'inscription",
+}) {
   const { question, to, label } = SWITCH[space];
 
   return (
-    <nav className="auth-topbar" aria-label="Navigation de l'inscription">
+    <nav className="auth-topbar" aria-label={navLabel}>
       <Link to="/" className="auth-topbar__link">
         <span aria-hidden="true">←</span> Retour aux événements
       </Link>

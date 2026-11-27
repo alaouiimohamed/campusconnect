@@ -26,8 +26,9 @@ export class ApiError extends Error {
  * Appelle l'API et renvoie le corps JSON.
  * Lève ApiError en cas d'erreur réseau ou de réponse HTTP non 2xx.
  * Une annulation (AbortController) est propagée telle quelle.
+ * `token` : jeton d'accès JWT, envoyé dans l'en-tête Authorization.
  */
-export async function apiRequest(path, { method = "GET", body, signal } = {}) {
+export async function apiRequest(path, { method = "GET", body, signal, token } = {}) {
   let response;
   try {
     response = await fetch(`${API_URL}${path}`, {
@@ -36,6 +37,7 @@ export async function apiRequest(path, { method = "GET", body, signal } = {}) {
       headers: {
         Accept: "application/json",
         ...(body !== undefined && { "Content-Type": "application/json" }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
