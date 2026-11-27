@@ -45,7 +45,7 @@ def organisateur(db):
 @pytest.fixture
 def categories(db):
     return [
-        Categorie.objects.create(nom="Conférence"),
+        Categorie.objects.get_or_create(nom="Conférence")[0],
         Categorie.objects.create(nom="Informatique"),
     ]
 

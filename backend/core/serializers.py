@@ -29,6 +29,54 @@ class CategorieResumeSerializer(serializers.ModelSerializer):
         fields = ["id", "nom"]
 
 
+class CategorieSerializer(serializers.ModelSerializer):
+    nom = serializers.CharField(
+        max_length=100,
+        trim_whitespace=True,
+        error_messages={
+            "required": "Ce champ est obligatoire.",
+            "blank": "Ce champ ne peut pas être vide.",
+            "max_length": "Ce champ ne doit pas dépasser 100 caractères.",
+        },
+    )
+    description = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        trim_whitespace=True,
+        error_messages={
+            "blank": "Ce champ peut être vide.",
+            "max_length": "Ce champ ne doit pas dépasser 255 caractères.",
+        },
+    )
+    abrv = serializers.CharField(
+        max_length=50,
+        required=False,
+        allow_blank=True,
+        trim_whitespace=True,
+        error_messages={
+            "blank": "Ce champ peut être vide.",
+            "max_length": "Ce champ ne doit pas dépasser 50 caractères.",
+        },
+    )
+
+    class Meta:
+        model = Categorie
+        fields = ["id", "nom", "description", "abrv"]
+        read_only_fields = ["id"]
+
+    def validate_nom(self, value):
+        nom = value.strip()
+        categories = Categorie.objects.filter(nom__iexact=nom)
+        if self.instance is not None:
+            categories = categories.exclude(pk=self.instance.pk)
+        if categories.exists():
+            raise serializers.ValidationError(
+                "Une catégorie existe déjà avec ce nom."
+            )
+        return nom
+
+
 def _organisateur(organisateur):
     user = organisateur.user
     return {
